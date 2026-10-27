@@ -1,0 +1,52 @@
+[
+  {
+    "id": 1,
+    "featured": true,
+    "title": "Sneaker đế chunky vẫn được yêu thích mùa cuối năm",
+    "topic": "Xu hướng",
+    "date": "05/10/2026",
+    "content": "Sneaker đế dày tiếp tục là lựa chọn quen thuộc của nhiều bạn nữ nhờ dáng chân thon hơn và đi rất êm. Màu trắng, kem và xám dễ phối với quần jeans, chân váy lẫn đồ thể thao. Khi chọn, bạn nên ưu tiên chất liệu thoáng như vải lưới hoặc da mềm để đi cả ngày không bí chân. Cuối ngày, lau sạch đế và để giày nơi thoáng sẽ giúp giày giữ form đẹp lâu hơn.",
+    "image": "",
+    "relatedProductIds": [9, 14, 22]
+  },
+  {
+    "id": 2,
+    "featured": false,
+    "title": "Cao gót đi làm: 3 cách phối để thoải mái cả ngày",
+    "topic": "Phối đồ",
+    "date": "12/10/2026",
+    "content": "Với môi trường công sở, gót từ 5 đến 7 cm thường là mức dễ đi nhất. Gót vuông cho cảm giác vững hơn gót nhọn, còn các tông đen, nude và kem dễ kết hợp với sơ mi, quần tây hoặc chân váy bút chì. Bạn có thể mang thêm một đôi búp bê trong túi để thay khi cần di chuyển nhiều. Hãy thử giày vào buổi chiều, khi chân hơi nở, để chọn đúng size.",
+    "image": "",
+    "relatedProductIds": [1, 12, 25, 3]
+  },
+  {
+    "id": 3,
+    "featured": false,
+    "title": "Cách giữ boots da luôn bền đẹp qua mùa lạnh",
+    "topic": "Chăm sóc giày",
+    "date": "18/10/2026",
+    "content": "Boots da cần được lau nhẹ bằng khăn ẩm mềm sau mỗi lần mang để loại bỏ bụi bẩn. Mỗi tháng bạn nên thoa một lớp kem dưỡng da mỏng để da không bị khô nứt. Khi cất, nhét giấy vào cổ giày để giữ form và tránh đặt gần nguồn nhiệt hay ánh nắng trực tiếp. Nếu giày bị ướt, hãy để khô tự nhiên thay vì dùng máy sấy.",
+    "image": "",
+    "relatedProductIds": [10, 16, 23]
+  },
+  {
+    "id": 4,
+    "featured": false,
+    "title": "Mã LUME50K giảm 50.000₫ cho đơn hàng của bạn",
+    "topic": "Khuyến mãi",
+    "date": "22/10/2026",
+    "content": "Nhập mã LUME50K ở bước giỏ hàng để được giảm ngay 50.000₫. Khách mới cũng có thể dùng mã WELCOME30K để giảm 30.000₫. Đơn hàng từ 1.500.000₫ được miễn phí vận chuyển, còn đơn dưới mức này có phí giao hàng 30.000₫. Đừng quên bạn có thể đổi size miễn phí trong vòng 7 ngày nếu giày chưa vừa chân.",
+    "image": "",
+    "relatedProductIds": [2, 6, 24, 17]
+  },
+  {
+    "id": 5,
+    "featured": false,
+    "title": "LUMÉ ra mắt ứng dụng mua sắm giày nữ",
+    "topic": "Tin LUMÉ",
+    "date": "25/10/2026",
+    "content": "LUMÉ vừa ra mắt ứng dụng giúp bạn chọn giày nữ nhanh hơn với bộ lọc theo gót, chất liệu và dịp sử dụng. Bạn có thể quét mã trên hộp giày hoặc tem sản phẩm để xem chi tiết ngay, và ghim vị trí để nhận hàng chính xác. Ứng dụng cũng cho phép theo dõi đơn hàng từng bước và đánh giá sản phẩm sau khi nhận. LUMÉ sẽ tiếp tục bổ sung mẫu mới mỗi tháng.",
+    "image": "",
+    "relatedProductIds": [11, 20, 13]
+  }
+]
