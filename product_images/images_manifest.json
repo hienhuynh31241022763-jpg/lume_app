@@ -1,0 +1,350 @@
+{
+  "3": [
+    {
+      "file": "03-sandal-lavender.jpg",
+      "color": "Tím lavender"
+    },
+    {
+      "file": "03-sandal-lavender-2.jpg",
+      "color": "Tím lavender"
+    },
+    {
+      "file": "03-sandal-lavender-3.jpg",
+      "color": "Bạc"
+    }
+  ],
+  "4": [
+    {
+      "file": "04-mules-mint.jpg",
+      "color": "Xanh mint"
+    },
+    {
+      "file": "04-mules-mint-2.jpg",
+      "color": "Xanh non"
+    }
+  ],
+  "5": [
+    {
+      "file": "05-sneaker-vanilla.jpg",
+      "color": "Vàng bơ"
+    },
+    {
+      "file": "05-sneaker-vanilla-2.jpg",
+      "color": "Vàng bơ"
+    },
+    {
+      "file": "05-sneaker-vanilla-3.jpg",
+      "color": "Nâu"
+    }
+  ],
+  "6": [
+    {
+      "file": "06-sandal-blossom.jpg",
+      "color": "Hồng phấn"
+    },
+    {
+      "file": "06-sandal-blossom-2.jpg",
+      "color": "Hồng phấn"
+    },
+    {
+      "file": "06-sandal-blossom-3.jpg",
+      "color": "Hồng phấn"
+    },
+    {
+      "file": "06-sandal-blossom-4.jpg",
+      "color": "Hồng đào"
+    }
+  ],
+  "7": [
+    {
+      "file": "07-bup-be-macaron.jpg",
+      "color": "Hồng phấn"
+    },
+    {
+      "file": "07-bup-be-macaron-2.jpg",
+      "color": "Hồng phấn"
+    },
+    {
+      "file": "07-bup-be-macaron-3.jpg",
+      "color": "Hồng phấn"
+    }
+  ],
+  "8": [
+    {
+      "file": "08-cao-got-fuchsia.jpg",
+      "color": "Hồng fuchsia"
+    },
+    {
+      "file": "08-cao-got-fuchsia-2.jpg",
+      "color": "Hồng fuchsia"
+    },
+    {
+      "file": "08-cao-got-fuchsia-3.jpg",
+      "color": "Xanh mint"
+    }
+  ],
+  "9": [
+    {
+      "file": "09-sneaker-candy.jpg",
+      "color": "Hồng nhạt"
+    },
+    {
+      "file": "09-sneaker-candy-2.jpg",
+      "color": "Hồng nhạt"
+    },
+    {
+      "file": "09-sneaker-candy-3.jpg",
+      "color": "Hồng nhạt"
+    },
+    {
+      "file": "09-sneaker-candy-4.jpg",
+      "color": "Vàng nhạt"
+    }
+  ],
+  "10": [
+    {
+      "file": "10-boots-rosette.jpg",
+      "color": "Hồng phấn"
+    },
+    {
+      "file": "10-boots-rosette-2.jpg",
+      "color": "Hồng nude"
+    }
+  ],
+  "11": [
+    {
+      "file": "11-cao-got-rose.jpg",
+      "color": "Ánh kim"
+    },
+    {
+      "file": "11-cao-got-rose-2.jpg",
+      "color": "Ánh kim"
+    },
+    {
+      "file": "11-cao-got-rose-3.jpg",
+      "color": "Đen tuyền"
+    }
+  ],
+  "12": [
+    {
+      "file": "12-bup-be-sweet.jpg",
+      "color": "Đen"
+    },
+    {
+      "file": "12-bup-be-sweet-2.jpg",
+      "color": "Đen"
+    }
+  ],
+  "13": [
+    {
+      "file": "13-cao-got-elegance.jpg",
+      "color": "Đen"
+    },
+    {
+      "file": "13-cao-got-elegance-2.jpg",
+      "color": "Đen"
+    }
+  ],
+  "14": [
+    {
+      "file": "14-mary-jane-muse.jpg",
+      "color": "Đen"
+    },
+    {
+      "file": "14-mary-jane-muse-2.jpg",
+      "color": "Đen"
+    }
+  ],
+  "15": [
+    {
+      "file": "15-sneaker-daily.jpg",
+      "color": "Trắng"
+    },
+    {
+      "file": "15-sneaker-daily-2.jpg",
+      "color": "Trắng"
+    }
+  ],
+  "16": [
+    {
+      "file": "16-mule-muse.jpg",
+      "color": "Be"
+    },
+    {
+      "file": "16-mule-muse-2.jpg",
+      "color": "Be"
+    }
+  ],
+  "17": [
+    {
+      "file": "17-boots-urban.jpg",
+      "color": "Đen"
+    },
+    {
+      "file": "17-boots-urban-2.jpg",
+      "color": "Đen"
+    }
+  ],
+  "18": [
+    {
+      "file": "18-sandal-sol.jpg",
+      "color": "Be"
+    },
+    {
+      "file": "18-sandal-sol-2.jpg",
+      "color": "Nâu"
+    },
+    {
+      "file": "18-sandal-sol-3.jpg",
+      "color": "Đen"
+    }
+  ],
+  "19": [
+    {
+      "file": "19-cao-got-gala.jpg",
+      "color": "Đỏ rượu"
+    },
+    {
+      "file": "19-cao-got-gala-2.jpg",
+      "color": "Đỏ rượu"
+    },
+    {
+      "file": "19-cao-got-gala-3.jpg",
+      "color": "Đỏ rượu"
+    },
+    {
+      "file": "19-cao-got-gala-4.jpg",
+      "color": "Đen"
+    }
+  ],
+  "20": [
+    {
+      "file": "20-sandal-crystal.jpg",
+      "color": "Trong suốt"
+    },
+    {
+      "file": "20-sandal-crystal-2.jpg",
+      "color": "Trong suốt"
+    },
+    {
+      "file": "20-sandal-crystal-3.jpg",
+      "color": "Trong suốt"
+    },
+    {
+      "file": "20-sandal-crystal-4.jpg",
+      "color": "Bạc"
+    }
+  ],
+  "21": [
+    {
+      "file": "21-bup-be-ballet.jpg",
+      "color": "Hồng phấn"
+    },
+    {
+      "file": "21-bup-be-ballet-2.jpg",
+      "color": "Hồng phấn"
+    },
+    {
+      "file": "21-bup-be-ballet-3.jpg",
+      "color": "Hồng phấn"
+    },
+    {
+      "file": "21-bup-be-ballet-4.jpg",
+      "color": "Kem"
+    }
+  ],
+  "22": [
+    {
+      "file": "22-mules-velvet.jpg",
+      "color": "Xanh rêu"
+    },
+    {
+      "file": "22-mules-velvet-2.jpg",
+      "color": "Xanh rêu"
+    },
+    {
+      "file": "22-mules-velvet-3.jpg",
+      "color": "Xanh rêu"
+    },
+    {
+      "file": "22-mules-velvet-4.jpg",
+      "color": "Đen"
+    }
+  ],
+  "23": [
+    {
+      "file": "23-sneaker-cloud.jpg",
+      "color": "Trắng"
+    },
+    {
+      "file": "23-sneaker-cloud-2.jpg",
+      "color": "Trắng hồng"
+    },
+    {
+      "file": "23-sneaker-cloud-3.jpg",
+      "color": "Trắng hồng"
+    },
+    {
+      "file": "23-sneaker-cloud-4.jpg",
+      "color": "Trắng hồng"
+    }
+  ],
+  "24": [
+    {
+      "file": "24-boots-noir.jpg",
+      "color": "Đen"
+    },
+    {
+      "file": "24-boots-noir-2.jpg",
+      "color": "Đen"
+    },
+    {
+      "file": "24-boots-noir-3.jpg",
+      "color": "Đen"
+    },
+    {
+      "file": "24-boots-noir-4.jpg",
+      "color": "Nâu sô-cô-la"
+    }
+  ],
+  "25": [
+    {
+      "file": "25-sandal-breeze.jpg",
+      "color": "Be"
+    },
+    {
+      "file": "25-sandal-breeze-2.jpg",
+      "color": "Be"
+    },
+    {
+      "file": "25-sandal-breeze-3.jpg",
+      "color": "Be"
+    },
+    {
+      "file": "25-sandal-breeze-4.jpg",
+      "color": "Hồng"
+    },
+    {
+      "file": "25-sandal-breeze-5.jpg",
+      "color": "Đen"
+    }
+  ],
+  "26": [
+    {
+      "file": "26-slingback-grace.jpg",
+      "color": "Kem"
+    },
+    {
+      "file": "26-slingback-grace-2.jpg",
+      "color": "Kem"
+    },
+    {
+      "file": "26-slingback-grace-3.jpg",
+      "color": "Kem"
+    },
+    {
+      "file": "26-slingback-grace-4.jpg",
+      "color": "Hồng phấn"
+    }
+  ]
+}
