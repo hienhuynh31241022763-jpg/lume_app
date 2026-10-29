@@ -22,6 +22,8 @@ class AdaptiveImage extends StatefulWidget {
     this.fallbackColor = const Color(0xFFF1EFF1),
     this.onColor,
     this.padding = EdgeInsets.zero,
+    this.fit = BoxFit.contain,
+    this.debugLabel,
   });
 
   final String url;
@@ -41,6 +43,12 @@ class AdaptiveImage extends StatefulWidget {
   /// Khoảng chừa quanh ảnh. Phần chừa vẫn được tô màu nền ảnh, nên ảnh
   /// tránh được các nút đè lên mà khung vẫn liền màu.
   final EdgeInsets padding;
+
+  /// contain = hiện trọn ảnh (thẻ sản phẩm); cover = phủ kín khung (Chi tiết).
+  final BoxFit fit;
+
+  /// Tên hiện trong Debug Console khi ảnh bắt đầu tải (để thấy lazy load).
+  final String? debugLabel;
 
   @override
   State<AdaptiveImage> createState() => _AdaptiveImageState();
@@ -70,6 +78,14 @@ class _AdaptiveImageState extends State<AdaptiveImage> {
   }
 
   void _setup() {
+    if (widget.url.isNotEmpty &&
+        widget.debugLabel != null &&
+        !_edgeColorCache.containsKey(widget.url)) {
+      // Lazy load: dòng này chỉ hiện khi thẻ vừa được cuộn tới (được dựng),
+      // thẻ chưa cuộn tới thì chưa tải ảnh → chưa có dòng.
+      debugPrint('🖼 [Lazy load] Thẻ hiện ra → bắt đầu tải ảnh: '
+          '${widget.debugLabel}');
+    }
     if (widget.url.isEmpty) {
       _provider = null;
       _bg = null;
@@ -106,19 +122,57 @@ class _AdaptiveImageState extends State<AdaptiveImage> {
       padding: widget.padding,
       child: Image(
         image: provider,
-        fit: BoxFit.contain,
+        fit: widget.fit,
         width: double.infinity,
         height: double.infinity,
         errorBuilder: (_, _, _) => widget.placeholder,
+        // Lúc đang tải: khung nhấp nháy nhẹ. Tải xong: ảnh hiện mờ dần lên.
         frameBuilder: (context, child, frame, wasSync) {
           if (wasSync) return child;
-          return AnimatedOpacity(
-            opacity: frame == null ? 0 : 1,
-            duration: const Duration(milliseconds: 300),
-            child: child,
+          final loaded = frame != null;
+          return Stack(
+            fit: StackFit.expand,
+            children: [
+              if (!loaded) const _LoadingPulse(),
+              AnimatedOpacity(
+                opacity: loaded ? 1 : 0,
+                duration: const Duration(milliseconds: 350),
+                child: child,
+              ),
+            ],
           );
         },
       ),
+    );
+  }
+}
+
+/// Khung sáng / tối nhấp nháy nhẹ trong lúc ảnh đang tải.
+class _LoadingPulse extends StatefulWidget {
+  const _LoadingPulse();
+
+  @override
+  State<_LoadingPulse> createState() => _LoadingPulseState();
+}
+
+class _LoadingPulseState extends State<_LoadingPulse>
+    with SingleTickerProviderStateMixin {
+  late final _anim = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 800),
+  )..repeat(reverse: true);
+
+  @override
+  void dispose() {
+    _anim.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: Tween(begin: 0.15, end: 0.6).animate(_anim),
+      child: const ColoredBox(color: Colors.white),
     );
   }
 }

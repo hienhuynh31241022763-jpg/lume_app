@@ -61,6 +61,7 @@ class HomeProductCard extends StatelessWidget {
                         child: _LazyImage(
                           url: product.image,
                           category: product.category,
+                          label: product.name,
                         ),
                       ),
                       if (product.isNew || product.hasDiscount)
@@ -162,6 +163,7 @@ class HomeProductTile extends StatelessWidget {
                     child: _LazyImage(
                       url: product.image,
                       category: product.category,
+                      label: product.name,
                     ),
                   ),
                 ),
@@ -273,10 +275,15 @@ class _Badge extends StatelessWidget {
 /// Ảnh tải từ mạng: chỉ tải khi thẻ được dựng (thẻ hiện trên màn hình),
 /// giải mã đúng kích thước khung cho nhẹ máy, hiện mờ dần khi tải xong.
 class _LazyImage extends StatelessWidget {
-  const _LazyImage({required this.url, required this.category});
+  const _LazyImage({
+    required this.url,
+    required this.category,
+    this.label,
+  });
 
   final String url;
   final String category;
+  final String? label;
 
   @override
   Widget build(BuildContext context) {
@@ -301,6 +308,7 @@ class _LazyImage extends StatelessWidget {
           cacheWidth: (constraints.maxWidth * dpr).round(),
           fallbackColor: bg,
           placeholder: placeholder,
+          debugLabel: label,
         );
       },
     );

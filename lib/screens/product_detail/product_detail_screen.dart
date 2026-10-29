@@ -606,15 +606,13 @@ class _ProductImage extends StatelessWidget {
         style: const TextStyle(fontSize: 150),
       ),
     );
-    // Ảnh hiện trọn (không phóng to, không cắt), nằm giữa hàng nút phía trên
-    // và hàng "1/3 · Vuốt · 🔍" phía dưới. Cả khung (kể cả chỗ chừa) tô
-    // đúng màu nền ảnh nên nhìn liền một khối.
-    final topInset = MediaQuery.paddingOf(context).top;
+    // Ở Chi tiết: ảnh phóng to phủ kín cả khung (cover), nên nền ảnh trùng
+    // khít với khung. Muốn xem trọn chiếc giày thì bấm 🔍 (xem toàn màn hình).
     return AdaptiveImage(
       url: url,
+      fit: BoxFit.cover,
       fallbackColor: AppColors.blush,
       placeholder: placeholder,
-      padding: EdgeInsets.fromLTRB(16, topInset + 60, 16, 56),
     );
   }
 }
