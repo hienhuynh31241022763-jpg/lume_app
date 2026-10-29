@@ -38,7 +38,13 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = context.watch<ProductProvider>();
     final products = productsOf(provider);
-    final categories = products.map((p) => p.category).toSet().toList();
+    // Danh mục theo thứ tự như prototype (Cao gót, Sneaker, Sandal…),
+    // loại lạ (nếu có) xếp cuối.
+    final found = products.map((p) => p.category).toSet();
+    final categories = [
+      ...categoryOrder.where(found.contains),
+      ...found.where((c) => !categoryOrder.contains(c)),
+    ];
 
     // Hàng mới: các đôi isNew = true. Chưa có thì lấy 8 đôi đầu cho khỏi trống.
     final newArrivals = products.where((p) => p.isNew).toList();
@@ -379,11 +385,35 @@ class _FlashSaleBanner extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: Stack(
         children: [
-          // TODO: thay emoji bằng ảnh giày thật khi có ảnh trên API.
-          const Positioned(
-            right: -6,
-            bottom: -14,
-            child: Text('👠', style: TextStyle(fontSize: 120)),
+          // Ảnh nền banner: assets/images/anhnentrangchu.jpg
+          // (thư mục assets/images/ đã khai báo sẵn trong pubspec.yaml).
+          // Ảnh phủ kín khung, canh phải để chiếc giày luôn nằm bên phải.
+          // Chưa có file ảnh thì tạm hiện emoji, app không bị lỗi.
+          Positioned.fill(
+            child: Image.asset(
+              'assets/images/anhnentrangchu.jpg',
+              fit: BoxFit.cover,
+              alignment: Alignment.centerRight,
+              errorBuilder: (_, _, _) => const Align(
+                alignment: Alignment.bottomRight,
+                child: Text('👠', style: TextStyle(fontSize: 120)),
+              ),
+            ),
+          ),
+          // Lớp hồng mờ dần từ trái sang phải để chữ trắng dễ đọc.
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    AppColors.roseDark.withValues(alpha: 0.92),
+                    AppColors.rose.withValues(alpha: 0.55),
+                    Colors.transparent,
+                  ],
+                  stops: const [0, 0.45, 0.8],
+                ),
+              ),
+            ),
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
@@ -503,51 +533,60 @@ class _CategoryRow extends StatelessWidget {
     final labelStyle = Theme.of(context).textTheme.bodySmall;
 
     return Padding(
-      padding: const EdgeInsets.only(top: 18),
-      child: SizedBox(
-        height: 88,
-        child: ListView.separated(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          itemCount: categories.length,
-          separatorBuilder: (_, _) => const SizedBox(width: 10),
-          itemBuilder: (context, i) => InkWell(
-            borderRadius: BorderRadius.circular(16),
-            // MH-06: bấm danh mục thì mở kết quả lọc sẵn theo loại này.
-            onTap: () => openFilterResults(
-              context,
-              title: categories[i],
-              filter: ProductFilter(categories: {categories[i]}),
-            ),
-            child: SizedBox(
-              width: 62,
-              child: Column(
-                children: [
-                  Container(
-                    width: 58,
-                    height: 58,
-                    alignment: Alignment.center,
-                    decoration: const BoxDecoration(
-                      color: AppColors.card,
-                      shape: BoxShape.circle,
+      padding: const EdgeInsets.fromLTRB(16, 18, 16, 0),
+      // Chia đều bề ngang cho tất cả danh mục để không mục nào bị tràn
+      // ra ngoài màn hình. Vòng tròn tự nhỏ lại nếu màn hình hẹp.
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          const gap = 6.0;
+          final n = categories.length;
+          final itemWidth = (constraints.maxWidth - gap * (n - 1)) / n;
+          final circle = itemWidth.clamp(40.0, 58.0);
+
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              for (var i = 0; i < n; i++) ...[
+                if (i > 0) const SizedBox(width: gap),
+                Expanded(
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(16),
+                    // MH-06: bấm danh mục thì mở kết quả lọc sẵn theo loại này.
+                    onTap: () => openFilterResults(
+                      context,
+                      title: categories[i],
+                      filter: ProductFilter(categories: {categories[i]}),
                     ),
-                    child: Text(
-                      emojiForCategory(categories[i]),
-                      style: const TextStyle(fontSize: 28),
+                    child: Column(
+                      children: [
+                        Container(
+                          width: circle,
+                          height: circle,
+                          alignment: Alignment.center,
+                          decoration: const BoxDecoration(
+                            color: AppColors.card,
+                            shape: BoxShape.circle,
+                          ),
+                          child: CategoryIcon(
+                            category: categories[i],
+                            size: circle,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          shortCategoryLabel(categories[i]),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: labelStyle?.copyWith(fontSize: 11.5),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    categories[i],
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: labelStyle,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
+                ),
+              ],
+            ],
+          );
+        },
       ),
     );
   }

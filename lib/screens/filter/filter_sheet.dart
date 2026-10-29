@@ -51,7 +51,7 @@ class _FilterSheetState extends State<_FilterSheet> {
       .where((f) => widget.products.any((p) => p.colors.any(f.matches)))
       .toList();
   late final _occasions = occasionOrder
-      .where((o) => widget.products.any((p) => p.occasions.contains(o)))
+      .where((o) => widget.products.any((p) => occasionTagsOf(p).contains(o)))
       .toList();
   late final _materials = [
     for (final (name, _) in materialGroups)
@@ -208,14 +208,16 @@ class _FilterSheetState extends State<_FilterSheet> {
                     values: _priceValues,
                     min: _bounds.start,
                     max: _bounds.end,
-                    divisions: priceDivisions(_bounds),
                     activeColor: AppColors.rose,
                     inactiveColor: AppColors.blush,
                     labels: RangeLabels(
                       shortPrice(_priceValues.start),
                       shortPrice(_priceValues.end),
                     ),
-                    onChanged: (r) {
+                    onChanged: (raw) {
+                      // Làm tròn theo bước 50.000₫ (không dùng divisions
+                      // để thanh trượt không hiện chấm như prototype).
+                      final r = roundPriceRange(raw);
                       final full = r.start <= _bounds.start &&
                           r.end >= _bounds.end;
                       _update(

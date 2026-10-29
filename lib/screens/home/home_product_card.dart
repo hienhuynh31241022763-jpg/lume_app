@@ -4,6 +4,7 @@ import '../../models/product.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/price_text.dart';
 import '../product_detail/product_route.dart';
+import 'adaptive_image.dart';
 import 'category_emoji.dart';
 
 /// Thẻ sản phẩm theo prototype Trang chủ: ảnh trong khung xám nhạt,
@@ -290,25 +291,16 @@ class _LazyImage extends StatelessWidget {
     );
     if (url.isEmpty) return placeholder;
 
+    // Lazy load: thẻ có hiện mới tải ảnh. Giải mã ảnh đúng cỡ khung cho nhẹ.
+    // Khung tự đổi theo màu nền ảnh (xem adaptive_image.dart).
     return LayoutBuilder(
       builder: (context, constraints) {
         final dpr = MediaQuery.devicePixelRatioOf(context);
-        return Container(
-          color: bg,
-          child: Image.network(
-            url,
-            fit: BoxFit.contain,
-            cacheWidth: (constraints.maxWidth * dpr).round(),
-            errorBuilder: (_, _, _) => placeholder,
-            frameBuilder: (context, child, frame, wasSync) {
-              if (wasSync) return child;
-              return AnimatedOpacity(
-                opacity: frame == null ? 0 : 1,
-                duration: const Duration(milliseconds: 300),
-                child: child,
-              );
-            },
-          ),
+        return AdaptiveImage(
+          url: url,
+          cacheWidth: (constraints.maxWidth * dpr).round(),
+          fallbackColor: bg,
+          placeholder: placeholder,
         );
       },
     );

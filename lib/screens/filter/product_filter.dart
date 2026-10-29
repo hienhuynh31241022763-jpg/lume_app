@@ -92,6 +92,30 @@ List<String> materialGroupsOf(String material) {
 }
 
 /// Thứ tự hiển thị dịp dùng và loại giày (giống dữ liệu đã chuẩn hoá).
+/// Gom dịp dùng ghi tự do trong dữ liệu ("dự tiệc tối", "Sự kiện",
+/// "đi làm công sở"…) về các nhãn cố định của bộ lọc, theo từ khoá.
+/// Nhờ vậy dữ liệu ghi kiểu nào bộ lọc cũng lọc được.
+const List<(String, List<String>)> _occasionKeywords = [
+  ('Đi học', ['học']),
+  ('Đi làm', ['làm', 'công sở', 'văn phòng', 'hội họp', 'gặp khách']),
+  ('Dự tiệc', ['tiệc', 'sự kiện', 'dạ hội', 'thảm đỏ']),
+  ('Dạo phố', ['dạo', 'đi chơi', 'cà phê', 'gặp gỡ', 'chụp ảnh', 'đi biển']),
+  ('Hẹn hò', ['hẹn hò']),
+  ('Du lịch', ['du lịch', 'biển', 'ngoài trời', 'xứ lạnh', 'mùa đông']),
+  ('Thể thao', ['thể thao', 'tập luyện']),
+];
+
+Set<String> occasionTagsOf(Product p) {
+  final tags = <String>{};
+  for (final raw in p.occasions) {
+    final o = raw.toLowerCase();
+    for (final (tag, keys) in _occasionKeywords) {
+      if (keys.any(o.contains)) tags.add(tag);
+    }
+  }
+  return tags;
+}
+
 const occasionOrder = [
   'Đi học',
   'Đi làm',
@@ -128,8 +152,10 @@ RangeValues priceBounds(List<Product> products) {
   return RangeValues(min.toDouble(), (max == min ? min + _priceStep : max).toDouble());
 }
 
-int priceDivisions(RangeValues bounds) =>
-    ((bounds.end - bounds.start) / _priceStep).round().clamp(1, 1000);
+RangeValues roundPriceRange(RangeValues r) {
+  double round(double v) => (v / _priceStep).round() * _priceStep.toDouble();
+  return RangeValues(round(r.start), round(r.end));
+}
 
 /// 350000 → "350K", 1250000 → "1,25tr"
 String shortPrice(num v) {
@@ -226,7 +252,7 @@ class ProductFilter {
       final ranges = heelRanges.where((h) => heels.contains(h.label));
       if (!ranges.any((h) => h.contains(p.heelHeight))) return false;
     }
-    if (occasions.isNotEmpty && !p.occasions.any(occasions.contains)) {
+    if (occasions.isNotEmpty && !occasionTagsOf(p).any(occasions.contains)) {
       return false;
     }
     if (materials.isNotEmpty &&

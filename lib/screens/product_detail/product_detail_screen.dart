@@ -8,10 +8,12 @@ import '../../routes/app_routes.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/price_text.dart';
 import '../cart/cart_screen.dart';
+import '../home/adaptive_image.dart';
 import '../home/category_emoji.dart';
 import '../home/demo_data.dart';
 import '../size_guide/saved_size.dart';
 import 'color_names.dart';
+import 'product_images.dart';
 import 'product_route.dart';
 
 /// Chi tiết sản phẩm (theo prototype màn 05)
@@ -49,6 +51,17 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   String? _soldOutTapped; // size hết hàng vừa bấm, để hiện "Báo khi có hàng"
   bool _sizeError = false; // bấm Thêm vào giỏ khi chưa chọn size
   bool _appliedSavedSize = false;
+
+  /// Ảnh theo từng màu, đọc thêm từ API (mảng `images`).
+  List<ColorImage> _colorImages = const [];
+
+  @override
+  void initState() {
+    super.initState();
+    fetchColorImages(widget.productId).then((list) {
+      if (mounted && list.isNotEmpty) setState(() => _colorImages = list);
+    });
+  }
 
   /// HT-06: mở Tìm size chuẩn, lưu xong thì chọn sẵn size vừa lưu.
   Future<void> _openSizeGuide(Product product) async {
@@ -133,14 +146,17 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             child: CustomScrollView(
               slivers: [
                 SliverToBoxAdapter(
-                  child: _MediaArea(product: product, heroTag: widget.heroTag),
+                  child: _MediaArea(
+                    product: product,
+                    images: imagesForColor(product, _colorImages, _color),
+                    heroTag: widget.heroTag,
+                  ),
                 ),
                 SliverToBoxAdapter(
                   child: _ColorPicker(
                     colors: product.colors,
                     selected: _color,
-                    // TODO (MH-12): đổi ảnh theo màu khi
-                    // dữ liệu có ảnh riêng cho từng màu.
+                    // Đổi màu thì khung ảnh phía trên đổi sang ảnh của màu đó.
                     onSelect: (c) => setState(() => _color = c),
                   ),
                 ),
@@ -180,41 +196,227 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
 // ─────────────── Khung ảnh trên cùng + nút quay lại, giỏ ───────────────
 
-class _MediaArea extends StatelessWidget {
-  const _MediaArea({required this.product, required this.heroTag});
+/// Khung ảnh trên cùng: ảnh phủ kín, vuốt ngang xem nhiều ảnh của màu đang
+/// chọn, chấm nhỏ chỉ ảnh thứ mấy. Nút ←, chia sẻ, giỏ hàng nằm đè lên ảnh.
+class _MediaArea extends StatefulWidget {
+  const _MediaArea({
+    required this.product,
+    required this.images,
+    required this.heroTag,
+  });
 
   final Product product;
+  final List<String> images;
   final String? heroTag;
+
+  @override
+  State<_MediaArea> createState() => _MediaAreaState();
+}
+
+class _MediaAreaState extends State<_MediaArea> {
+  final _controller = PageController();
+  int _page = 0;
+
+  @override
+  void didUpdateWidget(covariant _MediaArea old) {
+    super.didUpdateWidget(old);
+    // Đổi màu → bộ ảnh khác → quay về ảnh đầu tiên.
+    if (old.images.join() != widget.images.join()) {
+      _page = 0;
+      // Đợi khung hình vẽ xong mới cuộn về ảnh đầu (không cuộn giữa lúc build).
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _controller.hasClients) _controller.jumpToPage(0);
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _openViewer() {
+    if (widget.images.isEmpty) return;
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        opaque: false,
+        barrierColor: Colors.black,
+        pageBuilder: (_, _, _) =>
+            _ImageViewer(images: widget.images, initialPage: _page),
+        transitionsBuilder: (_, anim, _, child) =>
+            FadeTransition(opacity: anim, child: child),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final cartCount = context.watch<CartProvider>().count;
     final topInset = MediaQuery.paddingOf(context).top;
+    final width = MediaQuery.sizeOf(context).width;
+    final images = widget.images;
+    // Khung ảnh gần vuông, không cao quá 420 (chừa chỗ cho nút trên / dưới).
+    final height = (width * 0.95).clamp(300.0, 420.0) + topInset;
 
     return Container(
-      height: 300 + topInset,
+      height: height,
       decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFFF6DDE3), Color(0xFFFBEFF2)],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
+        color: AppColors.blush,
         borderRadius: BorderRadius.vertical(bottom: Radius.circular(28)),
       ),
       clipBehavior: Clip.antiAlias,
       child: Stack(
         children: [
+          // ── Ảnh: vuốt ngang để xem ảnh khác, chạm để phóng to ──
           Positioned.fill(
-            top: topInset + 56,
-            bottom: 12,
-            child: ProductHero(
-              tag: heroTag,
-              child: _ProductImage(
-                url: product.image,
-                category: product.category,
+            child: images.isEmpty
+                ? ProductHero(
+                    tag: widget.heroTag,
+                    child: _ProductImage(
+                      url: '',
+                      category: widget.product.category,
+                    ),
+                  )
+                : PageView.builder(
+                    controller: _controller,
+                    itemCount: images.length,
+                    onPageChanged: (i) => setState(() => _page = i),
+                    itemBuilder: (context, i) {
+                      final img = GestureDetector(
+                        onTap: _openViewer,
+                        child: _ProductImage(
+                          url: images[i],
+                          category: widget.product.category,
+                        ),
+                      );
+                      // Hero chỉ gắn vào ảnh đầu để ảnh bay từ thẻ sang.
+                      return i == 0
+                          ? ProductHero(tag: widget.heroTag, child: img)
+                          : img;
+                    },
+                  ),
+          ),
+
+          // ── Mũi tên trái / phải: bấm để sang ảnh trước / sau ──
+          if (images.length > 1 && _page > 0)
+            Positioned(
+              left: 10,
+              top: 0,
+              bottom: 0,
+              child: Center(
+                child: _ArrowButton(
+                  icon: Icons.chevron_left,
+                  onTap: () => _controller.previousPage(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOut,
+                  ),
+                ),
+              ),
+            ),
+          if (images.length > 1 && _page < images.length - 1)
+            Positioned(
+              right: 10,
+              top: 0,
+              bottom: 0,
+              child: Center(
+                child: _ArrowButton(
+                  icon: Icons.chevron_right,
+                  onTap: () => _controller.nextPage(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOut,
+                  ),
+                ),
+              ),
+            ),
+
+          // ── Lớp tối nhẹ phía trên cho nút dễ nhìn ──
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: topInset + 90,
+            child: IgnorePointer(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.black.withValues(alpha: 0.08),
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
+
+          // ── Hàng dưới (giống prototype): số ảnh · gợi ý vuốt · phóng to ──
+          if (images.isNotEmpty)
+            Positioned(
+              left: 16,
+              right: 16,
+              bottom: 14,
+              child: Row(
+                children: [
+                  _Pill(
+                    dark: true,
+                    child: Text(
+                      '${_page + 1}/${images.length}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  const Spacer(),
+                  // Chấm chỉ ảnh: mỗi ảnh 1 chấm, ảnh đang xem là chấm hồng.
+                  if (images.length > 1)
+                    _Pill(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          for (var i = 0; i < images.length; i++)
+                            AnimatedContainer(
+                              duration: const Duration(milliseconds: 220),
+                              margin: const EdgeInsets.symmetric(horizontal: 3),
+                              width: 7,
+                              height: 7,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: i == _page
+                                    ? AppColors.rose
+                                    : AppColors.muted.withValues(alpha: 0.35),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  const Spacer(),
+                  Material(
+                    color: Colors.white,
+                    shape: const CircleBorder(),
+                    child: InkWell(
+                      customBorder: const CircleBorder(),
+                      onTap: _openViewer,
+                      child: const SizedBox(
+                        width: 36,
+                        height: 36,
+                        child: Icon(
+                          Icons.zoom_in,
+                          size: 20,
+                          color: AppColors.ink,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+          // ── Nút ←, chia sẻ, giỏ hàng ──
           Positioned(
             top: topInset + 8,
             left: 16,
@@ -264,6 +466,130 @@ class _MediaArea extends StatelessWidget {
   }
 }
 
+/// Nút mũi tên tròn mờ ở 2 bên ảnh.
+class _ArrowButton extends StatelessWidget {
+  const _ArrowButton({required this.icon, required this.onTap});
+
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white.withValues(alpha: 0.85),
+      shape: const CircleBorder(),
+      elevation: 1,
+      shadowColor: Colors.black12,
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onTap,
+        child: SizedBox(
+          width: 36,
+          height: 36,
+          child: Icon(icon, size: 24, color: AppColors.ink),
+        ),
+      ),
+    );
+  }
+}
+
+/// Viên bo tròn nhỏ (số ảnh, chấm chỉ ảnh).
+class _Pill extends StatelessWidget {
+  const _Pill({required this.child, this.dark = false});
+
+  final Widget child;
+  final bool dark;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: dark
+            ? AppColors.ink.withValues(alpha: 0.85)
+            : Colors.white.withValues(alpha: 0.92),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: child,
+    );
+  }
+}
+
+/// Xem ảnh toàn màn hình: vuốt ngang đổi ảnh, chụm 2 ngón để phóng to.
+class _ImageViewer extends StatefulWidget {
+  const _ImageViewer({required this.images, required this.initialPage});
+
+  final List<String> images;
+  final int initialPage;
+
+  @override
+  State<_ImageViewer> createState() => _ImageViewerState();
+}
+
+class _ImageViewerState extends State<_ImageViewer> {
+  late final _controller = PageController(initialPage: widget.initialPage);
+  late int _page = widget.initialPage;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          PageView.builder(
+            controller: _controller,
+            itemCount: widget.images.length,
+            onPageChanged: (i) => setState(() => _page = i),
+            itemBuilder: (context, i) => InteractiveViewer(
+              minScale: 1,
+              maxScale: 4,
+              child: Center(
+                child: Image.network(
+                  widget.images[i],
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, _, _) => const Icon(
+                    Icons.broken_image_outlined,
+                    color: Colors.white54,
+                    size: 48,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.close, color: Colors.white),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  const Spacer(),
+                  Text(
+                    '${_page + 1}/${widget.images.length}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _ProductImage extends StatelessWidget {
   const _ProductImage({required this.url, required this.category});
 
@@ -272,22 +598,23 @@ class _ProductImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final placeholder = Center(
+    final placeholder = Container(
+      color: AppColors.blush,
+      alignment: Alignment.center,
       child: Text(
         emojiForCategory(category),
         style: const TextStyle(fontSize: 150),
       ),
     );
-    if (url.isEmpty) return placeholder;
-    return Image.network(
-      url,
-      fit: BoxFit.contain,
-      errorBuilder: (_, _, _) => placeholder,
-      loadingBuilder: (context, child, progress) => progress == null
-          ? child
-          : const Center(
-              child: CircularProgressIndicator(color: AppColors.rose),
-            ),
+    // Ảnh hiện trọn (không phóng to, không cắt), nằm giữa hàng nút phía trên
+    // và hàng "1/3 · Vuốt · 🔍" phía dưới. Cả khung (kể cả chỗ chừa) tô
+    // đúng màu nền ảnh nên nhìn liền một khối.
+    final topInset = MediaQuery.paddingOf(context).top;
+    return AdaptiveImage(
+      url: url,
+      fallbackColor: AppColors.blush,
+      placeholder: placeholder,
+      padding: EdgeInsets.fromLTRB(16, topInset + 60, 16, 56),
     );
   }
 }
