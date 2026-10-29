@@ -2,77 +2,81 @@ import 'package:flutter/material.dart';
 
 import '../models/product.dart';
 import '../theme/app_colors.dart';
+import 'heart_button.dart';
 import 'price_text.dart';
+import 'tap_scale.dart';
 
 class ProductCard extends StatelessWidget {
-  const ProductCard({super.key, required this.product, this.onTap});
-
   final Product product;
   final VoidCallback? onTap;
 
+  const ProductCard({super.key, required this.product, this.onTap});
+
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
+    return TapScale(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.card,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.line),
+        ),
+        clipBehavior: Clip.antiAlias,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
+            // Ảnh + nút thả tim ở góc
             AspectRatio(
               aspectRatio: 1,
-              child: _ProductImage(url: product.image),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Container(
+                    color: AppColors.blush,
+                    child: Image.network(
+                      product.image,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => const Icon(
+                        Icons.image_not_supported_outlined,
+                        color: AppColors.muted,
+                      ),
+                    ),
+                  ),
+                  const Positioned(top: 2, right: 2, child: HeartButton()),
+                ],
+              ),
             ),
+            // Tên + giá
             Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    product.category,
-                    style: textTheme.bodySmall?.copyWith(
-                      color: AppColors.muted,
+                    product.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: 4),
                   Text(
-                    product.name,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: textTheme.titleSmall,
+                    formatPrice(product.price),
+                    style: const TextStyle(
+                      color: AppColors.rose,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
-                  const SizedBox(height: 6),
-                  PriceText(product.price),
                 ],
               ),
             ),
           ],
         ),
       ),
-    );
-  }
-}
-
-class _ProductImage extends StatelessWidget {
-  const _ProductImage({required this.url});
-
-  final String url;
-
-  @override
-  Widget build(BuildContext context) {
-    final placeholder = Container(
-      color: AppColors.blush,
-      alignment: Alignment.center,
-      child: const Icon(Icons.image_outlined, color: AppColors.rose),
-    );
-    if (url.isEmpty) return placeholder;
-    return Image.network(
-      url,
-      fit: BoxFit.cover,
-      errorBuilder: (_, _, _) => placeholder,
-      loadingBuilder: (context, child, progress) =>
-          progress == null ? child : placeholder,
     );
   }
 }

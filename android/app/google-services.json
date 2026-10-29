@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "751744486038",
+    "project_id": "lume-app-29d35",
+    "storage_bucket": "lume-app-29d35.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:751744486038:android:52753c1e0878931473d0b7",
+        "android_client_info": {
+          "package_name": "com.example.lume_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "751744486038-16cgecni2tdops4r68vcpco476eb7hgb.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.lume_app",
+            "certificate_hash": "decb583bacc417a2998a2ec50020a36af251da12"
+          }
+        },
+        {
+          "client_id": "751744486038-9fgs0k6k8doefjjqs4v1k8gc7md1poha.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBZbD8Pp7z3fZc737CMcPgnXYN1DTlsCwY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "751744486038-9fgs0k6k8doefjjqs4v1k8gc7md1poha.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "751744486038-og9k2lsiknhab43rn00qaujmdmie6pk9.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.lumeApp"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
