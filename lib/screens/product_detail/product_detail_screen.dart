@@ -12,6 +12,7 @@ import '../home/adaptive_image.dart';
 import '../home/category_emoji.dart';
 import '../home/demo_data.dart';
 import '../size_guide/saved_size.dart';
+import '../filter/product_filter.dart';
 import 'color_names.dart';
 import 'product_images.dart';
 import 'product_route.dart';
@@ -360,6 +361,7 @@ class _MediaAreaState extends State<_MediaArea> {
               bottom: 14,
               child: Row(
                 children: [
+                  if (images.length > 1)
                   _Pill(
                     dark: true,
                     child: Text(
@@ -378,17 +380,34 @@ class _MediaAreaState extends State<_MediaArea> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          // Bấm vào chấm nào thì chuyển tới ảnh đó.
+                          // Vùng bấm 22×22 cho dễ bấm, chấm vẽ bên trong 8×8.
                           for (var i = 0; i < images.length; i++)
-                            AnimatedContainer(
-                              duration: const Duration(milliseconds: 220),
-                              margin: const EdgeInsets.symmetric(horizontal: 3),
-                              width: 7,
-                              height: 7,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: i == _page
-                                    ? AppColors.rose
-                                    : AppColors.muted.withValues(alpha: 0.35),
+                            GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              onTap: () => _controller.animateToPage(
+                                i,
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeOut,
+                              ),
+                              child: SizedBox(
+                                width: 22,
+                                height: 22,
+                                child: Center(
+                                  child: AnimatedContainer(
+                                    duration:
+                                        const Duration(milliseconds: 220),
+                                    width: 8,
+                                    height: 8,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: i == _page
+                                          ? AppColors.rose
+                                          : AppColors.muted
+                                                .withValues(alpha: 0.35),
+                                    ),
+                                  ),
+                                ),
                               ),
                             ),
                         ],
@@ -1093,10 +1112,21 @@ class _TagRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Nhãn ngắn gọn như prototype: chất liệu và dịp dùng được gom về nhãn
+    // chuẩn (VD "Da lộn/Da bóng (patent)" → "Da lộn – Nhung", "Da bóng";
+    // "dự tiệc tối", "Sự kiện" → "Dự tiệc"). Không gom được thì giữ nguyên.
+    final materials = materialGroupsOf(product.material);
+    final occasions = occasionTagsOf(product);
     final tags = [
       _heelLabel,
-      if (product.material.isNotEmpty) product.material,
-      ...product.occasions,
+      if (materials.isNotEmpty)
+        ...materials
+      else if (product.material.isNotEmpty)
+        product.material,
+      if (occasions.isNotEmpty)
+        ...occasionOrder.where(occasions.contains)
+      else
+        ...product.occasions,
     ];
 
     return Padding(
