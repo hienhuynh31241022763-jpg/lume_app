@@ -12,6 +12,7 @@ import '../menu/app_drawer.dart';
 import '../filter/filter_results_screen.dart';
 import '../filter/product_filter.dart';
 import '../product_detail/product_route.dart';
+import '../search/search_screen.dart';
 import 'category_emoji.dart';
 import 'demo_data.dart';
 import 'home_product_card.dart';
@@ -318,9 +319,13 @@ class _SearchBox extends StatelessWidget {
                   borderRadius: const BorderRadius.horizontal(
                     left: Radius.circular(16),
                   ),
-                  // TODO: chuyển sang tab Tìm kiếm (cần Hiền cho đổi tab
-                  // trong MainShell từ bên ngoài).
-                  onTap: () {},
+                  // Mở thẳng màn Tìm kiếm của Hạo đè lên Trang chủ, bấm ← là
+                  // quay lại. Khi Hiền cho đổi tab trong MainShell thì có thể
+                  // đổi sang chuyển tab.
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const SearchScreen()),
+                  ),
                   child: const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 14),
                     child: Row(
