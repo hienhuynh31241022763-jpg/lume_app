@@ -64,6 +64,36 @@ class CartProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Đổi size/màu ngay trong giỏ. Trùng với dòng đã có thì gộp số lượng.
+  void changeVariant(
+    CartItem item, {
+    required String size,
+    required String color,
+  }) {
+    if (item.size == size && item.color == color) return;
+    final index = _items.indexOf(item);
+    if (index < 0) return;
+    final same = _items.indexWhere(
+      (i) =>
+          i != item &&
+          i.product.id == item.product.id &&
+          i.size == size &&
+          i.color == color,
+    );
+    if (same >= 0) {
+      _items[same].quantity += item.quantity;
+      _items.removeAt(index);
+    } else {
+      _items[index] = CartItem(
+        product: item.product,
+        size: size,
+        color: color,
+        quantity: item.quantity,
+      );
+    }
+    notifyListeners();
+  }
+
   void remove(CartItem item) {
     _items.remove(item);
     notifyListeners();
