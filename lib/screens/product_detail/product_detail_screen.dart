@@ -7,7 +7,9 @@ import '../../providers/product_provider.dart';
 import '../../routes/app_routes.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/price_text.dart';
+import '../cart/cart_item_tile.dart';
 import '../cart/cart_screen.dart';
+import '../cart/fly_to_cart.dart';
 import '../home/adaptive_image.dart';
 import '../home/category_emoji.dart';
 import '../home/demo_data.dart';
@@ -22,10 +24,10 @@ import 'product_route.dart';
 /// - MH-12 (Uyên): chọn màu, chọn size, size hết hàng bị khóa.
 /// - MH-13 (Uyên): bắt buộc chọn size, thêm vào giỏ, Mua ngay.
 /// - HT-18 (Uyên): ảnh bay từ thẻ sang (Hero), xem product_route.dart.
+/// - HT-19 (Hạo): giày bay vào giỏ, gọi trong [_addToCart] (cart/fly_to_cart.dart).
 ///
 /// Làm sau:
 /// - MH-14 (Giang): đánh giá.
-/// - HT-19 (Hạo): hiệu ứng giày bay vào giỏ, gọi trong [_addToCart].
 class ProductDetailScreen extends StatefulWidget {
   const ProductDetailScreen({
     super.key,
@@ -52,6 +54,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   String? _soldOutTapped; // size hết hàng vừa bấm, để hiện "Báo khi có hàng"
   bool _sizeError = false; // bấm Thêm vào giỏ khi chưa chọn size
   bool _appliedSavedSize = false;
+
+  // HT-19: điểm bắt đầu (khung ảnh) và điểm đến (nút giỏ) của ảnh bay.
+  final _imageKey = GlobalKey();
+  final _cartKey = GlobalKey();
 
   /// Ảnh theo từng màu, đọc thêm từ API (mảng `images`).
   List<ColorImage> _colorImages = const [];
@@ -103,7 +109,17 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       return;
     }
 
-    // TODO (HT-19 · Hạo): chạy hiệu ứng giày bay vào biểu tượng giỏ ở đây.
+    flyToCart(
+      context,
+      from: _imageKey,
+      to: _cartKey,
+      child: ProductThumb(
+        url:
+            imagesForColor(product, _colorImages, _color).firstOrNull ?? '',
+        category: product.category,
+        size: 64,
+      ),
+    );
     messenger.showSnackBar(
       SnackBar(
         content: Text(
@@ -151,6 +167,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     product: product,
                     images: imagesForColor(product, _colorImages, _color),
                     heroTag: widget.heroTag,
+                    imageKey: _imageKey,
+                    cartKey: _cartKey,
                   ),
                 ),
                 SliverToBoxAdapter(
@@ -204,11 +222,15 @@ class _MediaArea extends StatefulWidget {
     required this.product,
     required this.images,
     required this.heroTag,
+    required this.imageKey,
+    required this.cartKey,
   });
 
   final Product product;
   final List<String> images;
   final String? heroTag;
+  final GlobalKey imageKey;
+  final GlobalKey cartKey;
 
   @override
   State<_MediaArea> createState() => _MediaAreaState();
@@ -261,6 +283,7 @@ class _MediaAreaState extends State<_MediaArea> {
     final height = (width * 0.95).clamp(300.0, 420.0) + topInset;
 
     return Container(
+      key: widget.imageKey,
       height: height,
       decoration: const BoxDecoration(
         color: AppColors.blush,
@@ -457,6 +480,7 @@ class _MediaAreaState extends State<_MediaArea> {
                 ),
                 const SizedBox(width: 10),
                 Stack(
+                  key: widget.cartKey,
                   clipBehavior: Clip.none,
                   children: [
                     _RoundButton(
