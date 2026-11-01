@@ -54,6 +54,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   String? _soldOutTapped; // size hết hàng vừa bấm, để hiện "Báo khi có hàng"
   bool _sizeError = false; // bấm Thêm vào giỏ khi chưa chọn size
   bool _appliedSavedSize = false;
+  bool _scrolled = false; // đã cuộn qua khung ảnh chưa
 
   // HT-19: điểm bắt đầu (khung ảnh) và điểm đến (nút giỏ) của ảnh bay.
   final _imageKey = GlobalKey();
@@ -160,7 +161,19 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       body: Column(
         children: [
           Expanded(
-            child: CustomScrollView(
+            child: Stack(
+              children: [
+                NotificationListener<ScrollNotification>(
+                  onNotification: (n) {
+                    // Cuộn qua khung ảnh thì hiện nền trắng sau hàng nút.
+                    final scrolled = n.metrics.axis == Axis.vertical &&
+                        n.metrics.pixels > 200;
+                    if (scrolled != _scrolled) {
+                      setState(() => _scrolled = scrolled);
+                    }
+                    return false;
+                  },
+                  child: CustomScrollView(
               slivers: [
                 SliverToBoxAdapter(
                   child: _MediaArea(
@@ -168,7 +181,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     images: imagesForColor(product, _colorImages, _color),
                     heroTag: widget.heroTag,
                     imageKey: _imageKey,
-                    cartKey: _cartKey,
                   ),
                 ),
                 SliverToBoxAdapter(
@@ -201,6 +213,16 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 // TODO (MH-14 · Giang): phần Đánh giá đặt ở đây.
                 const SliverToBoxAdapter(child: SizedBox(height: 24)),
               ],
+                  ),
+                ),
+                // Hàng nút ←, chia sẻ, giỏ luôn ghim trên cùng, cuộn tới đâu
+                // cũng thấy (giày bay vào giỏ luôn có chỗ để bay tới).
+                _TopBar(
+                  cartKey: _cartKey,
+                  showBackground: _scrolled,
+                  title: product.name,
+                ),
+              ],
             ),
           ),
           _BottomBar(
@@ -223,14 +245,12 @@ class _MediaArea extends StatefulWidget {
     required this.images,
     required this.heroTag,
     required this.imageKey,
-    required this.cartKey,
   });
 
   final Product product;
   final List<String> images;
   final String? heroTag;
   final GlobalKey imageKey;
-  final GlobalKey cartKey;
 
   @override
   State<_MediaArea> createState() => _MediaAreaState();
@@ -275,7 +295,6 @@ class _MediaAreaState extends State<_MediaArea> {
 
   @override
   Widget build(BuildContext context) {
-    final cartCount = context.watch<CartProvider>().count;
     final topInset = MediaQuery.paddingOf(context).top;
     final width = MediaQuery.sizeOf(context).width;
     final images = widget.images;
@@ -458,52 +477,97 @@ class _MediaAreaState extends State<_MediaArea> {
               ),
             ),
 
-          // ── Nút ←, chia sẻ, giỏ hàng ──
-          Positioned(
-            top: topInset + 8,
-            left: 16,
-            right: 16,
-            child: Row(
-              children: [
-                _RoundButton(
-                  icon: Icons.arrow_back_ios_new,
-                  tooltip: 'Quay lại',
-                  onTap: () => Navigator.maybePop(context),
-                ),
-                const Spacer(),
-                _RoundButton(
-                  icon: Icons.share_outlined,
-                  tooltip: 'Chia sẻ',
-                  onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Đã sao chép link sản phẩm')),
+        ],
+      ),
+    );
+  }
+}
+
+/// Hàng nút trên cùng, ghim cố định (không cuộn theo trang).
+/// Cuộn qua khung ảnh thì hiện nền trắng + tên sản phẩm cho dễ đọc.
+class _TopBar extends StatelessWidget {
+  const _TopBar({
+    required this.cartKey,
+    required this.showBackground,
+    required this.title,
+  });
+
+  final GlobalKey cartKey;
+  final bool showBackground;
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    final cartCount = context.watch<CartProvider>().count;
+    final topInset = MediaQuery.paddingOf(context).top;
+
+    return Positioned(
+      top: 0,
+      left: 0,
+      right: 0,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: EdgeInsets.fromLTRB(16, topInset + 8, 16, 8),
+        decoration: BoxDecoration(
+          color: showBackground ? AppColors.background : Colors.transparent,
+          boxShadow: showBackground
+              ? const [BoxShadow(color: Color(0x14000000), blurRadius: 8)]
+              : null,
+        ),
+        child: Row(
+          children: [
+            _RoundButton(
+              icon: Icons.arrow_back_ios_new,
+              tooltip: 'Quay lại',
+              onTap: () => Navigator.maybePop(context),
+            ),
+            Expanded(
+              child: AnimatedOpacity(
+                duration: const Duration(milliseconds: 200),
+                opacity: showBackground ? 1 : 0,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
-                const SizedBox(width: 10),
-                Stack(
-                  key: widget.cartKey,
-                  clipBehavior: Clip.none,
-                  children: [
-                    _RoundButton(
-                      icon: Icons.shopping_bag_outlined,
-                      tooltip: 'Giỏ hàng',
-                      // Mở màn Giỏ hàng của Hạo đè lên trên, bấm ← là quay lại
-                      // Chi tiết. Không cần sửa MainShell.
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const CartScreen()),
-                      ),
-                    ),
-                    Positioned(
-                      right: -2,
-                      top: -4,
-                      child: _CountBadge(count: cartCount),
-                    ),
-                  ],
+              ),
+            ),
+            _RoundButton(
+              icon: Icons.share_outlined,
+              tooltip: 'Chia sẻ',
+              onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Đã sao chép link sản phẩm')),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Stack(
+              key: cartKey,
+              clipBehavior: Clip.none,
+              children: [
+                _RoundButton(
+                  icon: Icons.shopping_bag_outlined,
+                  tooltip: 'Giỏ hàng',
+                  // Mở màn Giỏ hàng của Hạo đè lên trên, bấm ← là quay lại.
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const CartScreen()),
+                  ),
+                ),
+                Positioned(
+                  right: -2,
+                  top: -4,
+                  child: _CountBadge(count: cartCount),
                 ),
               ],
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
