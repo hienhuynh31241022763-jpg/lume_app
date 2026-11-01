@@ -62,7 +62,9 @@ class AppRoutes {
       notifications => const NotificationsScreen(),
       news => const NewsScreen(),
       help => const HelpScreen(),
-      about => const AboutScreen(),
+      about => AboutScreen(
+        initialTab: settings.arguments is int ? settings.arguments as int : 0,
+      ),
       _ => const MainShell(),
     };
     return MaterialPageRoute(builder: (_) => page, settings: settings);
