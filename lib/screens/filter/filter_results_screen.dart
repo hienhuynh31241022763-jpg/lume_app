@@ -14,9 +14,12 @@ import 'product_filter.dart';
 /// Mở từ Trang chủ: bấm danh mục, "Xem tất cả", hoặc nút lọc.
 /// Có chip đang chọn (bấm × để bỏ), đếm kết quả, sắp xếp,
 /// đổi kiểu lưới / danh sách.
+/// MH-07 (Hạo): Tìm kiếm mở trang này kèm [query]. Có từ khoá thì lọc theo
+/// từ khoá trước, rồi mới áp bộ lọc và sắp xếp.
 Future<void> openFilterResults(
   BuildContext context, {
   String title = 'Tất cả sản phẩm',
+  String query = '',
   ProductFilter filter = const ProductFilter(),
   SortOption sort = SortOption.popular,
   bool openSheet = false,
@@ -25,6 +28,7 @@ Future<void> openFilterResults(
     MaterialPageRoute(
       builder: (_) => FilterResultsScreen(
         title: title,
+        query: query,
         initialFilter: filter,
         initialSort: sort,
         openSheetOnStart: openSheet,
@@ -37,12 +41,14 @@ class FilterResultsScreen extends StatefulWidget {
   const FilterResultsScreen({
     super.key,
     this.title = 'Tất cả sản phẩm',
+    this.query = '',
     this.initialFilter = const ProductFilter(),
     this.initialSort = SortOption.popular,
     this.openSheetOnStart = false,
   });
 
   final String title;
+  final String query;
   final ProductFilter initialFilter;
   final SortOption initialSort;
   final bool openSheetOnStart;
@@ -54,6 +60,7 @@ class FilterResultsScreen extends StatefulWidget {
 class _FilterResultsScreenState extends State<FilterResultsScreen> {
   late ProductFilter _filter = widget.initialFilter;
   late SortOption _sort = widget.initialSort;
+  late String _query = widget.query.trim();
   bool _grid = true;
 
   @override
@@ -64,8 +71,12 @@ class _FilterResultsScreenState extends State<FilterResultsScreen> {
     }
   }
 
+  /// Sản phẩm khớp từ khoá (chưa áp bộ lọc), để bảng lọc đếm đúng.
+  List<Product> _searched(List<Product> all) =>
+      _query.isEmpty ? all : all.where((p) => matchesQuery(p, _query)).toList();
+
   Future<void> _openSheet() async {
-    final products = productsOf(context.read<ProductProvider>());
+    final products = _searched(productsOf(context.read<ProductProvider>()));
     final result = await showFilterSheet(
       context,
       products: products,
@@ -79,7 +90,7 @@ class _FilterResultsScreenState extends State<FilterResultsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final products = productsOf(context.watch<ProductProvider>());
+    final products = _searched(productsOf(context.watch<ProductProvider>()));
     final results = _filter.apply(products, _sort);
     final chips = _filter.chips;
     final textTheme = Theme.of(context).textTheme;
@@ -100,30 +111,39 @@ class _FilterResultsScreenState extends State<FilterResultsScreen> {
                   ),
                   Expanded(
                     child: Text(
-                      widget.title,
+                      _query.isEmpty ? widget.title : 'Kết quả cho "$_query"',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: textTheme.titleLarge,
                     ),
                   ),
-                  _FilterButton(
-                    count: _filter.activeCount,
-                    onTap: _openSheet,
-                  ),
+                  _FilterButton(count: _filter.activeCount, onTap: _openSheet),
                 ],
               ),
             ),
 
-            // ── Chip đang chọn ──
-            if (chips.isNotEmpty)
+            // ── Chip đang chọn (chip từ khoá đứng đầu) ──
+            if (chips.isNotEmpty || _query.isNotEmpty)
               SizedBox(
                 height: 44,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
-                  itemCount: chips.length + 1,
+                  itemCount:
+                      (_query.isEmpty ? 0 : 1) +
+                      chips.length +
+                      (chips.isEmpty ? 0 : 1),
                   separatorBuilder: (_, _) => const SizedBox(width: 8),
                   itemBuilder: (context, i) {
+                    if (_query.isNotEmpty) {
+                      if (i == 0) {
+                        return _ActiveChip(
+                          label: '"$_query"',
+                          onDeleted: () => setState(() => _query = ''),
+                        );
+                      }
+                      i--;
+                    }
                     if (i == chips.length) {
                       return TextButton(
                         onPressed: () =>
@@ -135,18 +155,9 @@ class _FilterResultsScreenState extends State<FilterResultsScreen> {
                       );
                     }
                     final chip = chips[i];
-                    return InputChip(
-                      label: Text(chip.label),
-                      labelStyle: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 12,
-                      ),
-                      backgroundColor: AppColors.roseDark,
-                      side: BorderSide.none,
-                      deleteIconColor: Colors.white,
-                      onDeleted: () =>
-                          setState(() => _filter = chip.withoutIt),
+                    return _ActiveChip(
+                      label: chip.label,
+                      onDeleted: () => setState(() => _filter = chip.withoutIt),
                     );
                   },
                 ),
@@ -212,10 +223,17 @@ class _FilterResultsScreenState extends State<FilterResultsScreen> {
             // ── Kết quả ──
             Expanded(
               child: results.isEmpty
-                  ? _EmptyView(
-                      onReset: () =>
-                          setState(() => _filter = const ProductFilter()),
-                    )
+                  ? (_filter.isEmpty && _query.isNotEmpty
+                        ? _EmptyView(
+                            title: 'Không tìm thấy "$_query"',
+                            hint: 'Thử từ khoá khác, VD: cao gót, sneaker',
+                            action: 'Xem tất cả sản phẩm',
+                            onReset: () => setState(() => _query = ''),
+                          )
+                        : _EmptyView(
+                            onReset: () =>
+                                setState(() => _filter = const ProductFilter()),
+                          ))
                   : _grid
                   ? _ResultGrid(products: results, onTap: _open)
                   : _ResultList(products: results, onTap: _open),
@@ -223,6 +241,40 @@ class _FilterResultsScreenState extends State<FilterResultsScreen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Tìm theo tên, loại, chất liệu (giống ProductProvider.search),
+/// không phân biệt hoa thường. Tìm kiếm (MH-07) dùng chung hàm này
+/// để gợi ý và trang kết quả khớp nhau.
+bool matchesQuery(Product p, String query) {
+  final q = query.trim().toLowerCase();
+  if (q.isEmpty) return true;
+  return p.name.toLowerCase().contains(q) ||
+      p.category.toLowerCase().contains(q) ||
+      p.material.toLowerCase().contains(q);
+}
+
+class _ActiveChip extends StatelessWidget {
+  const _ActiveChip({required this.label, required this.onDeleted});
+
+  final String label;
+  final VoidCallback onDeleted;
+
+  @override
+  Widget build(BuildContext context) {
+    return InputChip(
+      label: Text(label),
+      labelStyle: const TextStyle(
+        color: Colors.white,
+        fontWeight: FontWeight.w600,
+        fontSize: 12,
+      ),
+      backgroundColor: AppColors.roseDark,
+      side: BorderSide.none,
+      deleteIconColor: Colors.white,
+      onDeleted: onDeleted,
     );
   }
 }
@@ -333,9 +385,17 @@ class _ResultList extends StatelessWidget {
 }
 
 class _EmptyView extends StatelessWidget {
-  const _EmptyView({required this.onReset});
+  const _EmptyView({
+    required this.onReset,
+    this.title = 'Chưa có đôi nào khớp bộ lọc',
+    this.hint = 'Thử bỏ bớt vài lựa chọn nhé',
+    this.action = 'Đặt lại bộ lọc',
+  });
 
   final VoidCallback onReset;
+  final String title;
+  final String hint;
+  final String action;
 
   @override
   Widget build(BuildContext context) {
@@ -347,21 +407,20 @@ class _EmptyView extends StatelessWidget {
           const Text('🥿', style: TextStyle(fontSize: 56)),
           const SizedBox(height: 12),
           Text(
-            'Chưa có đôi nào khớp bộ lọc',
+            title,
+            textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: 4),
-          const Text(
-            'Thử bỏ bớt vài lựa chọn nhé',
-            style: TextStyle(color: AppColors.muted),
+          Text(
+            hint,
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: AppColors.muted),
           ),
           const SizedBox(height: 16),
           SizedBox(
             width: 180,
-            child: OutlinedButton(
-              onPressed: onReset,
-              child: const Text('Đặt lại bộ lọc'),
-            ),
+            child: OutlinedButton(onPressed: onReset, child: Text(action)),
           ),
         ],
       ),
