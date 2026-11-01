@@ -17,6 +17,8 @@ import '../size_guide/saved_size.dart';
 import '../filter/product_filter.dart';
 import 'color_names.dart';
 import 'product_images.dart';
+import 'product_reviews.dart';
+import 'product_reviews_screen.dart';
 import 'product_route.dart';
 
 /// Chi tiết sản phẩm (theo prototype màn 05)
@@ -27,7 +29,6 @@ import 'product_route.dart';
 /// - HT-19 (Hạo): giày bay vào giỏ, gọi trong [_addToCart] (cart/fly_to_cart.dart).
 ///
 /// Làm sau:
-/// - MH-14 (Giang): đánh giá.
 class ProductDetailScreen extends StatefulWidget {
   const ProductDetailScreen({
     super.key,
@@ -148,6 +149,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
     // Mặc định chọn màu đầu tiên.
     _color ??= product.colors.isNotEmpty ? product.colors.first : null;
+    final reviews = reviewsForProduct(product.id);
 
     // HT-06: đã lưu size trong Tìm size chuẩn thì chọn sẵn nếu còn hàng.
     if (!_appliedSavedSize) {
@@ -179,7 +181,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     onSelect: (c) => setState(() => _color = c),
                   ),
                 ),
-                SliverToBoxAdapter(child: _InfoSection(product: product)),
+                SliverToBoxAdapter(
+                  child: _InfoSection(
+                    product: product,
+                    reviewCount: reviews.length,
+                    reviewRating: averageRatingOf(reviews),
+                  ),
+                ),
                 SliverToBoxAdapter(
                   child: _SizePicker(
                     sizes: allSizes,
@@ -198,7 +206,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 ),
                 SliverToBoxAdapter(child: _TagRow(product: product)),
                 SliverToBoxAdapter(child: _Description(product: product)),
-                // TODO (MH-14 · Giang): phần Đánh giá đặt ở đây.
+                SliverToBoxAdapter(
+                  child: _ProductReviews(
+                    productName: product.name,
+                    reviews: reviews,
+                  ),
+                ),
                 const SliverToBoxAdapter(child: SizedBox(height: 24)),
               ],
             ),
@@ -825,9 +838,15 @@ class _Swatch extends StatelessWidget {
 // ───────────────────────── Tên, đánh giá, giá ─────────────────────────
 
 class _InfoSection extends StatelessWidget {
-  const _InfoSection({required this.product});
+  const _InfoSection({
+    required this.product,
+    required this.reviewCount,
+    required this.reviewRating,
+  });
 
   final Product product;
+  final int reviewCount;
+  final double? reviewRating;
 
   @override
   Widget build(BuildContext context) {
@@ -845,8 +864,8 @@ class _InfoSection extends StatelessWidget {
               const Icon(Icons.star_rounded, size: 16, color: AppColors.gold),
               const SizedBox(width: 2),
               Text(
-                product.rating > 0
-                    ? product.rating.toStringAsFixed(1)
+                (reviewRating ?? product.rating) > 0
+                    ? (reviewRating ?? product.rating).toStringAsFixed(1)
                     : 'Chưa có đánh giá',
                 style: textTheme.bodySmall?.copyWith(
                   color: AppColors.gold,
@@ -854,8 +873,9 @@ class _InfoSection extends StatelessWidget {
                 ),
               ),
               Text(
-                // TODO (MH-14): đổi thành "x đánh giá" khi có dữ liệu reviews.
-                ' · ${product.category}',
+                reviewCount > 0
+                    ? ' · $reviewCount đánh giá'
+                    : ' · ${product.category}',
                 style: textTheme.bodySmall?.copyWith(color: AppColors.muted),
               ),
             ],
@@ -898,6 +918,94 @@ class _InfoSection extends StatelessWidget {
               ],
             ],
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProductReviews extends StatelessWidget {
+  const _ProductReviews({required this.productName, required this.reviews});
+
+  final String productName;
+  final List<ProductReview> reviews;
+
+  void _openAll(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => ProductReviewsScreen(
+          productName: productName,
+          reviews: reviews,
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (reviews.isEmpty) return const SizedBox.shrink();
+    final textTheme = Theme.of(context).textTheme;
+    final rating = averageRatingOf(reviews);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Row(
+                  children: [
+                    if (rating != null) ...[
+                      Text(
+                        rating.toStringAsFixed(1),
+                        style: textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(width: 3),
+                      const Icon(
+                        Icons.star_rounded,
+                        size: 19,
+                        color: AppColors.gold,
+                      ),
+                      const SizedBox(width: 7),
+                    ],
+                    Flexible(
+                      child: Text(
+                        'Đánh giá sản phẩm (${reviews.length})',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              TextButton(
+                onPressed: () => _openAll(context),
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.muted,
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('Tất cả'),
+                    SizedBox(width: 2),
+                    Icon(Icons.chevron_right, size: 18),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ProductFitSummary(reviews: reviews),
+          const SizedBox(height: 12),
+          ProductReviewCard(review: reviews.first),
         ],
       ),
     );
