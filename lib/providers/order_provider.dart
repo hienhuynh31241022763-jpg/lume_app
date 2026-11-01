@@ -23,7 +23,7 @@ class OrderProvider extends ChangeNotifier {
   bool _loading = false;
   String? _error;
 
-  List<Order> get orders => _orders;
+  List<Order> get orders => List.unmodifiable(_orders);
   bool get isLoading => _loading;
   String? get error => _error;
 
@@ -77,14 +77,23 @@ class OrderProvider extends ChangeNotifier {
   }
 
   Future<bool> cancel(String id) async {
+    final index = _orders.indexWhere((order) => order.id == id);
+    if (index < 0 || _orders[index].status != OrderStatus.pending) {
+      _error = 'Chỉ có thể hủy đơn hàng đang chờ xác nhận';
+      notifyListeners();
+      return false;
+    }
+
     try {
       await _api.updateStatus(id, OrderStatus.cancelled);
-      await load();
+      _orders[index] = _orders[index].copyWith(status: OrderStatus.cancelled);
+      _error = null;
+      notifyListeners();
       return true;
     } on ApiException catch (e) {
       _error = e.message;
       notifyListeners();
-      return null != null;
+      return false;
     }
   }
 }

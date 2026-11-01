@@ -75,6 +75,30 @@ class ProductReviewCard extends StatelessWidget {
             review.comment,
             style: textTheme.bodySmall?.copyWith(height: 1.45),
           ),
+          if (review.imageCount > 0) ...[
+            const SizedBox(height: 10),
+            Container(
+              width: 68,
+              height: 68,
+              decoration: BoxDecoration(
+                color: AppColors.blush,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppColors.line),
+              ),
+              child: const Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.image_outlined,
+                    color: AppColors.roseDark,
+                    size: 22,
+                  ),
+                  SizedBox(height: 3),
+                  Text('Ảnh', style: TextStyle(fontSize: 10)),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -120,9 +144,8 @@ class _ProductReviewsScreenState extends State<ProductReviewsScreen> {
                   widget.productName,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: Theme.of(context).textTheme.titleMedium
+                      ?.copyWith(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 8),
                 Row(
@@ -135,16 +158,14 @@ class _ProductReviewsScreenState extends State<ProductReviewsScreen> {
                     const SizedBox(width: 4),
                     Text(
                       rating?.toStringAsFixed(1) ?? '—',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
+                      style: Theme.of(context).textTheme.titleMedium
+                          ?.copyWith(fontWeight: FontWeight.w700),
                     ),
                     const SizedBox(width: 6),
                     Text(
                       '· ${reviews.length} đánh giá',
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodySmall?.copyWith(color: AppColors.muted),
+                      style: Theme.of(context).textTheme.bodySmall
+                          ?.copyWith(color: AppColors.muted),
                     ),
                   ],
                 ),
@@ -224,11 +245,7 @@ class ProductFitSummary extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(
-                Icons.straighten,
-                size: 18,
-                color: AppColors.roseDark,
-              ),
+              const Icon(Icons.straighten, size: 18, color: AppColors.roseDark),
               const SizedBox(width: 7),
               Expanded(
                 child: Text(
@@ -275,9 +292,8 @@ class _FitBar extends StatelessWidget {
           width: 70,
           child: Text(
             fit,
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: AppColors.muted),
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(color: AppColors.muted),
           ),
         ),
         Expanded(
@@ -296,9 +312,8 @@ class _FitBar extends StatelessWidget {
           child: Text(
             '$percent% ($count)',
             textAlign: TextAlign.end,
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: AppColors.muted),
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(color: AppColors.muted),
           ),
         ),
       ],

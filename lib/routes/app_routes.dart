@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../models/order.dart';
 import '../screens/about/about_screen.dart';
 import '../screens/auth/login_screen.dart';
 import '../screens/auth/register_screen.dart';
@@ -51,9 +52,11 @@ class AppRoutes {
       ),
       sizeGuide => const SizeGuideScreen(),
       checkout => const CheckoutScreen(),
-      orderSuccess => const OrderSuccessScreen(),
+      orderSuccess => OrderSuccessScreen(
+        order: settings.arguments is Order ? settings.arguments as Order : null,
+      ),
       orders => const OrdersScreen(),
-      review => const ReviewScreen(),
+      review => ReviewScreen(args: settings.arguments as ReviewRouteArgs),
       scan => const ScanScreen(),
       pinLocation => const PinLocationScreen(),
       notifications => const NotificationsScreen(),

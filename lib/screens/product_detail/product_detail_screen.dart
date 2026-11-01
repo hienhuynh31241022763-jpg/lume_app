@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../models/product.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/product_provider.dart';
+import '../../providers/review_provider.dart';
 import '../../routes/app_routes.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/price_text.dart';
@@ -30,11 +31,7 @@ import 'product_route.dart';
 ///
 /// Làm sau:
 class ProductDetailScreen extends StatefulWidget {
-  const ProductDetailScreen({
-    super.key,
-    required this.productId,
-    this.heroTag,
-  });
+  const ProductDetailScreen({super.key, required this.productId, this.heroTag});
 
   final String productId;
 
@@ -81,7 +78,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         _sizeError = false;
         _soldOutTapped = null;
       } else {
-        _soldOutTapped = result; // size gợi ý đã hết hàng → hiện "Báo khi có hàng"
+        _soldOutTapped =
+            result; // size gợi ý đã hết hàng → hiện "Báo khi có hàng"
       }
     });
   }
@@ -115,8 +113,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       from: _imageKey,
       to: _cartKey,
       child: ProductThumb(
-        url:
-            imagesForColor(product, _colorImages, _color).firstOrNull ?? '',
+        url: imagesForColor(product, _colorImages, _color).firstOrNull ?? '',
         category: product.category,
         size: 64,
       ),
@@ -149,7 +146,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
     // Mặc định chọn màu đầu tiên.
     _color ??= product.colors.isNotEmpty ? product.colors.first : null;
-    final reviews = reviewsForProduct(product.id);
+    final reviews = context.watch<ReviewProvider>().forProduct(product.id);
 
     // HT-06: đã lưu size trong Tìm size chuẩn thì chọn sẵn nếu còn hàng.
     if (!_appliedSavedSize) {
@@ -398,17 +395,17 @@ class _MediaAreaState extends State<_MediaArea> {
               child: Row(
                 children: [
                   if (images.length > 1)
-                  _Pill(
-                    dark: true,
-                    child: Text(
-                      '${_page + 1}/${images.length}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
+                    _Pill(
+                      dark: true,
+                      child: Text(
+                        '${_page + 1}/${images.length}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
-                  ),
                   const Spacer(),
                   // Chấm chỉ ảnh: mỗi ảnh 1 chấm, ảnh đang xem là chấm hồng.
                   if (images.length > 1)
@@ -431,16 +428,16 @@ class _MediaAreaState extends State<_MediaArea> {
                                 height: 22,
                                 child: Center(
                                   child: AnimatedContainer(
-                                    duration:
-                                        const Duration(milliseconds: 220),
+                                    duration: const Duration(milliseconds: 220),
                                     width: 8,
                                     height: 8,
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
                                       color: i == _page
                                           ? AppColors.rose
-                                          : AppColors.muted
-                                                .withValues(alpha: 0.35),
+                                          : AppColors.muted.withValues(
+                                              alpha: 0.35,
+                                            ),
                                     ),
                                   ),
                                 ),
@@ -933,10 +930,8 @@ class _ProductReviews extends StatelessWidget {
   void _openAll(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => ProductReviewsScreen(
-          productName: productName,
-          reviews: reviews,
-        ),
+        builder: (_) =>
+            ProductReviewsScreen(productName: productName, reviews: reviews),
       ),
     );
   }
@@ -1176,9 +1171,7 @@ class _SizeBox extends StatelessWidget {
         decoration: BoxDecoration(
           color: selected ? AppColors.rose : AppColors.card,
           borderRadius: radius,
-          border: Border.all(
-            color: selected ? AppColors.rose : AppColors.line,
-          ),
+          border: Border.all(color: selected ? AppColors.rose : AppColors.line),
         ),
         child: ClipRRect(
           borderRadius: radius,
@@ -1277,9 +1270,8 @@ class _TagRow extends StatelessWidget {
               ),
               child: Text(
                 tag,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.ink,
-                ),
+                style: Theme.of(context).textTheme.bodySmall
+                    ?.copyWith(color: AppColors.ink),
               ),
             ),
         ],

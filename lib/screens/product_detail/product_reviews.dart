@@ -8,6 +8,8 @@ class ProductReview {
     required this.comment,
     required this.date,
     required this.enteredBy,
+    this.imageCount = 0,
+    this.orderId,
   });
 
   final int id;
@@ -18,6 +20,8 @@ class ProductReview {
   final String comment;
   final String date;
   final String enteredBy;
+  final int imageCount;
+  final String? orderId;
 }
 
 const productReviews = [
