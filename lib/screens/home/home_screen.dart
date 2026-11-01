@@ -66,7 +66,11 @@ class HomeScreen extends StatelessWidget {
           child: CustomScrollView(
             slivers: [
               const SliverToBoxAdapter(child: _HomeHeader()),
-              const SliverToBoxAdapter(child: _SearchBox()),
+              // Ô tìm kiếm + nút quét + nút lọc ghim trên cùng khi cuộn.
+              SliverPersistentHeader(
+                pinned: true,
+                delegate: _PinnedSearchDelegate(),
+              ),
               const SliverToBoxAdapter(child: _FlashSaleBanner()),
               SliverToBoxAdapter(
                 child: _CategoryRow(categories: categories),
@@ -276,6 +280,48 @@ class _HomeHeader extends StatelessWidget {
 }
 
 // ─────────────── Thanh tìm kiếm + nút quét mã + nút bộ lọc ───────────────
+
+/// Giữ ô tìm kiếm ở trên cùng khi cuộn Trang chủ. Cuộn qua thì có nền
+/// và bóng mờ nhẹ để tách khỏi nội dung bên dưới.
+class _PinnedSearchDelegate extends SliverPersistentHeaderDelegate {
+  // 14 (trên) + 56 (ô tìm kiếm) + 16 (dưới), khớp padding của _SearchBox.
+  static const double _height = 86;
+
+  @override
+  double get minExtent => _height;
+
+  @override
+  double get maxExtent => _height;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    // Đã cuộn qua vị trí gốc của ô tìm kiếm → đang "dính" trên cùng.
+    final stuck = shrinkOffset > 0 || overlapsContent;
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        boxShadow: stuck
+            ? const [
+                BoxShadow(
+                  color: Color(0x14000000),
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
+                ),
+              ]
+            : null,
+      ),
+      child: const _SearchBox(),
+    );
+  }
+
+  @override
+  bool shouldRebuild(covariant _PinnedSearchDelegate oldDelegate) => false;
+}
 
 class _SearchBox extends StatelessWidget {
   const _SearchBox();
