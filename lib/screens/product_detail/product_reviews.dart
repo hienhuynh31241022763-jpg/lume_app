@@ -1,0 +1,239 @@
+class ProductReview {
+  const ProductReview({
+    required this.id,
+    required this.productId,
+    required this.author,
+    required this.rating,
+    required this.fit,
+    required this.comment,
+    required this.date,
+    required this.enteredBy,
+    this.imageCount = 0,
+    this.orderId,
+  });
+
+  final int id;
+  final String productId;
+  final String author;
+  final int rating;
+  final String fit;
+  final String comment;
+  final String date;
+  final String enteredBy;
+  final int imageCount;
+  final String? orderId;
+}
+
+const productReviews = [
+  ProductReview(
+    id: 1,
+    productId: '1',
+    author: 'Minh Anh',
+    rating: 5,
+    fit: 'Vừa chân',
+    comment: 'Mũi giày thanh lịch, form đẹp và dễ phối cùng trang phục công sở. Gót cao nhưng vẫn khá chắc chắn.',
+    date: '20/10/2026',
+    enteredBy: 'Giang',
+  ),
+  ProductReview(
+    id: 2,
+    productId: '2',
+    author: 'Thu Hà',
+    rating: 4,
+    fit: 'Vừa chân',
+    comment: 'Sandal quai mảnh nhìn nhẹ nhàng, phù hợp đi chơi và dạo phố. Quai giày khá đẹp khi mang.',
+    date: '21/10/2026',
+    enteredBy: 'Giang',
+  ),
+  ProductReview(
+    id: 3,
+    productId: '4',
+    author: 'Ngọc Mai',
+    rating: 5,
+    fit: 'Vừa chân',
+    comment: 'Thiết kế mũi vuông hiện đại, dễ mang và tiện khi di chuyển. Màu sắc cũng rất dễ phối đồ.',
+    date: '8/10/2026',
+    enteredBy: 'Giang',
+  ),
+  ProductReview(
+    id: 4,
+    productId: '5',
+    author: 'Phương Linh',
+    rating: 4,
+    fit: 'Hơi rộng',
+    comment: 'Sneaker chunky có kiểu dáng trẻ trung, phối với quần jeans rất hợp. Form giày hơi rộng với chân nhỏ.',
+    date: '20/9/2026',
+    enteredBy: 'Giang',
+  ),
+  ProductReview(
+    id: 5,
+    productId: '7',
+    author: 'Khánh Vy',
+    rating: 5,
+    fit: 'Vừa chân',
+    comment: 'Giày búp bê đính nơ trông xinh xắn và nữ tính. Có thể mang đi học hoặc đi chơi đều phù hợp.',
+    date: '24/10/2026',
+    enteredBy: 'Giang',
+  ),
+  ProductReview(
+    id: 6,
+    productId: '10',
+    author: 'Bảo Ngọc',
+    rating: 4,
+    fit: 'Vừa chân',
+    comment: 'Boots cổ ngắn mang phong cách cá tính, dễ phối cùng váy ngắn hoặc quần jeans.',
+    date: '22/10/2026',
+    enteredBy: 'Giang',
+  ),
+  ProductReview(
+    id: 7,
+    productId: '11',
+    author: 'Thanh Trúc',
+    rating: 5,
+    fit: 'Vừa chân',
+    comment: 'Chi tiết ánh kim tạo điểm nhấn nổi bật, phù hợp với những dịp cần ăn mặc thanh lịch.',
+    date: '20/8/2026',
+    enteredBy: 'Giang',
+  ),
+  ProductReview(
+    id: 8,
+    productId: '14',
+    author: 'Hoài Thương',
+    rating: 4,
+    fit: 'Hơi chật',
+    comment: 'Mary Jane có thiết kế cổ điển và dễ thương. Nếu chân hơi bè thì nên kiểm tra bảng size trước khi chọn.',
+    date: '27/10/2026',
+    enteredBy: 'Giang',
+  ),
+  ProductReview(
+    id: 9,
+    productId: '18',
+    author: 'Yến Nhi',
+    rating: 5,
+    fit: 'Vừa chân',
+    comment: 'Sandal đế xuồng giúp tôn dáng, đồng thời tạo cảm giác vững hơn so với gót nhọn.',
+    date: '23/9/2026',
+    enteredBy: 'Giang',
+  ),
+  ProductReview(
+    id: 10,
+    productId: '26',
+    author: 'Diễm My',
+    rating: 5,
+    fit: 'Vừa chân',
+    comment: 'Slingback có kiểu dáng tinh tế, phù hợp đi làm hoặc dự tiệc. Quai hậu tạo điểm nhấn thanh lịch.',
+    date: '29/10/2026',
+    enteredBy: 'Giang',
+  ),
+  ProductReview(
+    id: 11,
+    productId: '3',
+    author: 'Hồng Nhung',
+    rating: 4,
+    fit: 'Vừa chân',
+    comment: 'Sandal màu đẹp, quai mảnh tạo cảm giác thanh thoát. Mang đi tiệc hoặc đi chơi đều hợp.',
+    date: '20/10/2026',
+    enteredBy: 'Giang',
+  ),
+  ProductReview(
+    id: 12,
+    productId: '6',
+    author: 'Quỳnh Anh',
+    rating: 4,
+    fit: 'Vừa chân',
+    comment: 'Chi tiết nơ xinh xắn, nhìn nữ tính và nổi bật. Mình thích kiểu dáng này vì dễ phối với váy.',
+    date: '8/8/2026',
+    enteredBy: 'Giang',
+  ),
+  ProductReview(
+    id: 13,
+    productId: '8',
+    author: 'Gia Hân',
+    rating: 5,
+    fit: 'Hơi chật',
+    comment: 'Giày có màu sắc nổi bật, kiểu mũi nhọn giúp tổng thể trông thanh lịch. Nên cân nhắc size nếu chân bè.',
+    date: '12/4/2026',
+    enteredBy: 'Giang',
+  ),
+  ProductReview(
+    id: 14,
+    productId: '9',
+    author: 'Thảo Vy',
+    rating: 4,
+    fit: 'Vừa chân',
+    comment: 'Sneaker có thiết kế trẻ trung, màu sắc ngọt ngào và dễ tạo điểm nhấn cho trang phục thường ngày.',
+    date: '23/5/2026',
+    enteredBy: 'Giang',
+  ),
+  ProductReview(
+    id: 15,
+    productId: '12',
+    author: 'Mai Phương',
+    rating: 5,
+    fit: 'Vừa chân',
+    comment: 'Giày búp bê nhẹ nhàng, chiếc nơ tạo điểm nhấn đáng yêu. Phù hợp mang đi học hoặc dạo phố.',
+    date: '16/5/2026',
+    enteredBy: 'Giang',
+  ),
+  ProductReview(
+    id: 16,
+    productId: '13',
+    author: 'Tú Anh',
+    rating: 4,
+    fit: 'Hơi rộng',
+    comment: 'Gót vuông tạo cảm giác vững khi đi lại, kiểu dáng cũng khá dễ phối đồ. Phần thân giày hơi rộng với chân mình.',
+    date: '30/6/2026',
+    enteredBy: 'Giang',
+  ),
+  ProductReview(
+    id: 17,
+    productId: '15',
+    author: 'Ngân Hà',
+    rating: 5,
+    fit: 'Vừa chân',
+    comment: 'Sneaker đơn giản, dễ kết hợp với nhiều kiểu trang phục. Phù hợp để mang thường xuyên khi đi học.',
+    date: '26/7/2026',
+    enteredBy: 'Giang',
+  ),
+  ProductReview(
+    id: 18,
+    productId: '17',
+    author: 'Mỹ Linh',
+    rating: 4,
+    fit: 'Vừa chân',
+    comment: 'Boots cổ thấp có kiểu dáng cá tính, phối với quần jeans rất đẹp. Thiết kế phù hợp cho những ngày muốn đổi phong cách.',
+    date: '22/7/2026',
+    enteredBy: 'Giang',
+  ),
+  ProductReview(
+    id: 19,
+    productId: '20',
+    author: 'Lan Anh',
+    rating: 5,
+    fit: 'Vừa chân',
+    comment: 'Phần gót trong tạo hiệu ứng khá độc đáo, tổng thể trông hiện đại và nổi bật. Phù hợp khi đi dự tiệc.',
+    date: '28/8/2026',
+    enteredBy: 'Giang',
+  ),
+  ProductReview(
+    id: 20,
+    productId: '25',
+    author: 'Khả Hân',
+    rating: 4,
+    fit: 'Hơi rộng',
+    comment: 'Sandal xỏ ngón tiện mang, thiết kế thoáng và phù hợp đi chơi mùa hè. Quai hơi rộng so với chân mình.',
+    date: '3/7/2026',
+    enteredBy: 'Giang',
+  ),
+];
+
+List<ProductReview> reviewsForProduct(String productId) => [
+  for (final review in productReviews)
+    if (review.productId == productId) review,
+];
+
+double? averageRatingOf(List<ProductReview> reviews) {
+  if (reviews.isEmpty) return null;
+  return reviews.fold<int>(0, (total, review) => total + review.rating) /
+      reviews.length;
+}

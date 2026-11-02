@@ -75,6 +75,18 @@ class Order {
     required this.createdAt,
   });
 
+  Order copyWith({String? status}) => Order(
+    id: id,
+    customerName: customerName,
+    phone: phone,
+    address: address,
+    paymentMethod: paymentMethod,
+    status: status ?? this.status,
+    items: items,
+    total: total,
+    createdAt: createdAt,
+  );
+
   factory Order.fromJson(Map<String, dynamic> json) {
     final rawItems = json['items'];
     return Order(

@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../../models/product.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/notification_provider.dart';
 import '../../providers/product_provider.dart';
 import '../../routes/app_routes.dart';
 import '../../theme/app_colors.dart';
@@ -204,12 +205,10 @@ class _CircleButton extends StatelessWidget {
 class _HomeHeader extends StatelessWidget {
   const _HomeHeader();
 
-  // TODO: lấy số thông báo chưa đọc khi Giang làm xong Thông báo (HT-09).
-  static const _unread = 3;
-
   @override
   Widget build(BuildContext context) {
     final name = context.watch<AuthProvider>().name;
+    final unread = context.watch<NotificationProvider>().unreadCount;
     final textTheme = Theme.of(context).textTheme;
 
     return Padding(
@@ -250,7 +249,7 @@ class _HomeHeader extends StatelessWidget {
                 onTap: () =>
                     Navigator.pushNamed(context, AppRoutes.notifications),
               ),
-              if (_unread > 0)
+              if (unread > 0)
                 Positioned(
                   right: -2,
                   top: -4,
@@ -261,8 +260,8 @@ class _HomeHeader extends StatelessWidget {
                       shape: BoxShape.circle,
                       border: Border.all(color: Colors.white, width: 2),
                     ),
-                    child: const Text(
-                      '$_unread',
+                    child: Text(
+                      '$unread',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 10,
