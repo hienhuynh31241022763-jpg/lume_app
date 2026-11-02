@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 
+import '../../data/support_api.dart';
 import '../../theme/app_colors.dart';
 
 class AboutScreen extends StatefulWidget {
-  const AboutScreen({super.key, this.initialTab = 0});
+  const AboutScreen({super.key, this.initialTab = 0, this.supportApi});
 
   final int initialTab;
+  final SupportApi? supportApi;
 
   @override
   State<AboutScreen> createState() => _AboutScreenState();
@@ -44,7 +46,7 @@ class _AboutScreenState extends State<AboutScreen>
         controller: _tabs,
         children: [
           _StoryTab(onContact: () => _tabs.animateTo(1)),
-          const _ContactTab(),
+          _ContactTab(supportApi: widget.supportApi),
         ],
       ),
     );
@@ -152,9 +154,15 @@ class _StoryTab extends StatelessWidget {
           ),
           child: const Row(
             children: [
-              Expanded(child: _StoryMetric(value: '120+', label: 'mẫu giày')),
-              Expanded(child: _StoryMetric(value: '35–40', label: 'đủ size')),
-              Expanded(child: _StoryMetric(value: '4.8★', label: 'đánh giá')),
+              Expanded(
+                child: _StoryMetric(value: '120+', label: 'mẫu giày'),
+              ),
+              Expanded(
+                child: _StoryMetric(value: '35–40', label: 'đủ size'),
+              ),
+              Expanded(
+                child: _StoryMetric(value: '4.8★', label: 'đánh giá'),
+              ),
             ],
           ),
         ),
@@ -237,17 +245,16 @@ class _StoryMetric extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 2),
-        Text(
-          label,
-          style: const TextStyle(color: Colors.white70, fontSize: 8),
-        ),
+        Text(label, style: const TextStyle(color: Colors.white70, fontSize: 8)),
       ],
     );
   }
 }
 
 class _ContactTab extends StatefulWidget {
-  const _ContactTab();
+  const _ContactTab({this.supportApi});
+
+  final SupportApi? supportApi;
 
   @override
   State<_ContactTab> createState() => _ContactTabState();
@@ -261,6 +268,7 @@ class _ContactTabState extends State<_ContactTab> {
   final _emailController = TextEditingController();
   final _questionController = TextEditingController();
   String _topic = _topics.first;
+  bool _isSubmitting = false;
 
   @override
   void dispose() {
@@ -270,21 +278,36 @@ class _ContactTabState extends State<_ContactTab> {
     super.dispose();
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     FocusScope.of(context).unfocus();
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        const SnackBar(
-          content: Text('Câu hỏi đã được ghi nhận (mô phỏng).'),
-        ),
+    setState(() => _isSubmitting = true);
+    try {
+      final id = await (widget.supportApi ?? SupportApi()).submitQuestion(
+        name: _nameController.text.trim(),
+        email: _emailController.text.trim(),
+        topic: _topic,
+        question: _questionController.text.trim(),
       );
-    _formKey.currentState!.reset();
-    _nameController.clear();
-    _emailController.clear();
-    _questionController.clear();
-    setState(() => _topic = _topics.first);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(content: Text('Đã gửi câu hỏi thành công. Mã: $id')),
+        );
+      _formKey.currentState!.reset();
+      _nameController.clear();
+      _emailController.clear();
+      _questionController.clear();
+      setState(() => _topic = _topics.first);
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text('Gửi câu hỏi thất bại: $error')));
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
   }
 
   @override
@@ -295,9 +318,8 @@ class _ContactTabState extends State<_ContactTab> {
         Text(
           'LUMÉ luôn sẵn sàng hỗ trợ bạn',
           textAlign: TextAlign.center,
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+          style: Theme.of(context).textTheme.titleLarge
+              ?.copyWith(fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 5),
         const Text(
@@ -349,9 +371,8 @@ class _ContactTabState extends State<_ContactTab> {
         Text(
           'Gửi câu hỏi cho LUMÉ',
           textAlign: TextAlign.center,
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+          style: Theme.of(context).textTheme.titleLarge
+              ?.copyWith(fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 5),
         const Text(
@@ -423,14 +444,20 @@ class _ContactTabState extends State<_ContactTab> {
                 height: 48,
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: _submit,
-                  icon: const Icon(Icons.send_outlined),
-                  label: const Text('Gửi câu hỏi'),
+                  onPressed: _isSubmitting ? null : _submit,
+                  icon: _isSubmitting
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.send_outlined),
+                  label: Text(_isSubmitting ? 'Đang gửi...' : 'Gửi câu hỏi'),
                 ),
               ),
               const SizedBox(height: 8),
               const Text(
-                'Biểu mẫu hiện chưa kết nối hệ thống tiếp nhận câu hỏi.',
+                'Câu hỏi sẽ được gửi đến bộ phận hỗ trợ LUMÉ.',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: AppColors.muted, fontSize: 11),
               ),

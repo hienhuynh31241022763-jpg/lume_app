@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../data/faq_data.dart';
+import '../../data/support_api.dart';
 import '../../routes/app_routes.dart';
 import '../../theme/app_colors.dart';
 
@@ -31,7 +32,9 @@ const _terms = [
 ];
 
 class HelpScreen extends StatefulWidget {
-  const HelpScreen({super.key});
+  const HelpScreen({super.key, this.supportApi});
+
+  final SupportApi? supportApi;
 
   @override
   State<HelpScreen> createState() => _HelpScreenState();
@@ -62,13 +65,13 @@ class _HelpScreenState extends State<HelpScreen>
       context: context,
       isScrollControlled: true,
       backgroundColor: AppColors.background,
-      builder: (_) => const _ExchangeRequestSheet(),
+      builder: (_) => _ExchangeRequestSheet(supportApi: widget.supportApi),
     );
     if (!mounted || request == null) return;
     setState(() => _lastExchangeRequest = request.reference);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Đã ghi nhận yêu cầu ${request.reference} (mô phỏng).'),
+        content: Text('Đã gửi yêu cầu đổi trả. Mã: ${request.reference}'),
       ),
     );
   }
@@ -197,7 +200,11 @@ class _HelpScreenState extends State<HelpScreen>
     const steps = [
       ('01', 'Tạo yêu cầu', 'Gửi mã đơn và lý do đổi size.'),
       ('02', 'Chờ xác nhận', 'Nhân viên liên hệ xác nhận thông tin.'),
-      ('03', 'Gửi sản phẩm', 'Đóng gói giày cùng phụ kiện và gửi theo hướng dẫn.'),
+      (
+        '03',
+        'Gửi sản phẩm',
+        'Đóng gói giày cùng phụ kiện và gửi theo hướng dẫn.',
+      ),
       ('04', 'Nhận size mới', 'LUMÉ kiểm tra sản phẩm và gửi size bạn chọn.'),
     ];
 
@@ -213,7 +220,11 @@ class _HelpScreenState extends State<HelpScreen>
           child: const Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.swap_horiz_rounded, color: AppColors.roseDark, size: 30),
+              Icon(
+                Icons.swap_horiz_rounded,
+                color: AppColors.roseDark,
+                size: 30,
+              ),
               SizedBox(height: 10),
               Text(
                 'Đổi size miễn phí trong 7 ngày',
@@ -234,9 +245,8 @@ class _HelpScreenState extends State<HelpScreen>
         const SizedBox(height: 20),
         Text(
           'Quy trình 4 bước',
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+          style: Theme.of(context).textTheme.titleLarge
+              ?.copyWith(fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 8),
         for (var index = 0; index < steps.length; index++)
@@ -306,10 +316,7 @@ class _HelpScreenState extends State<HelpScreen>
                   alignment: Alignment.centerLeft,
                   child: Text(
                     body,
-                    style: const TextStyle(
-                      color: AppColors.muted,
-                      height: 1.5,
-                    ),
+                    style: const TextStyle(color: AppColors.muted, height: 1.5),
                   ),
                 ),
               ],
@@ -438,7 +445,10 @@ class _ProcessStep extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
+                  Text(
+                    title,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
                   const SizedBox(height: 3),
                   Text(
                     description,
@@ -465,7 +475,9 @@ class _ExchangeRequest {
 }
 
 class _ExchangeRequestSheet extends StatefulWidget {
-  const _ExchangeRequestSheet();
+  const _ExchangeRequestSheet({this.supportApi});
+
+  final SupportApi? supportApi;
 
   @override
   State<_ExchangeRequestSheet> createState() => _ExchangeRequestSheetState();
@@ -476,6 +488,8 @@ class _ExchangeRequestSheetState extends State<_ExchangeRequestSheet> {
   final _orderController = TextEditingController();
   final _phoneController = TextEditingController();
   String? _reason;
+  bool _isSubmitting = false;
+  String? _submitError;
 
   @override
   void dispose() {
@@ -484,10 +498,27 @@ class _ExchangeRequestSheetState extends State<_ExchangeRequestSheet> {
     super.dispose();
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    final suffix = DateTime.now().millisecondsSinceEpoch.toString().substring(8);
-    Navigator.pop(context, _ExchangeRequest('EX-$suffix'));
+    setState(() {
+      _isSubmitting = true;
+      _submitError = null;
+    });
+    try {
+      final id = await (widget.supportApi ?? SupportApi())
+          .submitExchangeRequest(
+            orderCode: _orderController.text.trim(),
+            phone: _phoneController.text.trim(),
+            reason: _reason!,
+          );
+      if (mounted) Navigator.pop(context, _ExchangeRequest(id));
+    } catch (error) {
+      if (mounted) {
+        setState(() => _submitError = 'Gửi yêu cầu thất bại: $error');
+      }
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
   }
 
   @override
@@ -507,9 +538,8 @@ class _ExchangeRequestSheetState extends State<_ExchangeRequestSheet> {
             children: [
               Text(
                 'Tạo yêu cầu đổi size',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+                style: Theme.of(context).textTheme.titleLarge
+                    ?.copyWith(fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -545,16 +575,29 @@ class _ExchangeRequestSheetState extends State<_ExchangeRequestSheet> {
                     value == null ? 'Vui lòng chọn lý do đổi' : null,
               ),
               const SizedBox(height: 18),
+              if (_submitError != null) ...[
+                Text(
+                  _submitError!,
+                  style: const TextStyle(color: AppColors.error, fontSize: 12),
+                ),
+                const SizedBox(height: 10),
+              ],
               SizedBox(
                 height: 48,
                 child: ElevatedButton(
-                  onPressed: _submit,
-                  child: const Text('Gửi yêu cầu'),
+                  onPressed: _isSubmitting ? null : _submit,
+                  child: _isSubmitting
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Gửi yêu cầu'),
                 ),
               ),
               const SizedBox(height: 8),
               const Text(
-                'Yêu cầu được mô phỏng trong phiên hiện tại, chưa gửi lên máy chủ.',
+                'Yêu cầu sẽ được gửi đến bộ phận xử lý đổi trả LUMÉ.',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: AppColors.muted, fontSize: 11),
               ),

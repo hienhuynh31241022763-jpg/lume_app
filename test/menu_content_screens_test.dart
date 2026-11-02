@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
+import 'package:lume_app/data/notification_data.dart';
+import 'package:lume_app/data/notification_store.dart';
+import 'package:lume_app/data/support_api.dart';
 import 'package:lume_app/providers/notification_provider.dart';
 import 'package:lume_app/providers/product_provider.dart';
 import 'package:lume_app/routes/app_routes.dart';
@@ -10,13 +13,13 @@ import 'package:lume_app/screens/news/news_screen.dart';
 import 'package:lume_app/screens/notifications/notifications_screen.dart';
 
 void main() {
-  testWidgets('notifications filter workbook data and mark items read', (
+  testWidgets('notification inbox shows an empty state without mock content', (
     tester,
   ) async {
     await tester.binding.setSurfaceSize(const Size(430, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
-    final provider = NotificationProvider();
+    final provider = NotificationProvider(store: _EmptyNotificationStore());
     await tester.pumpWidget(
       ChangeNotifierProvider.value(
         value: provider,
@@ -25,34 +28,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Đơn hàng đã được xác nhận'), findsOneWidget);
-    expect(find.text('Giảm 20% toàn bộ sandal'), findsOneWidget);
-    expect(provider.unreadCount, 10);
-
-    await tester.tap(find.text('Khuyến mãi'));
-    await tester.pumpAndSettle();
-    expect(find.text('Giảm 20% toàn bộ sandal'), findsOneWidget);
-    expect(find.text('Đơn hàng đã được xác nhận'), findsNothing);
-
-    await tester.tap(find.text('Giảm 20% toàn bộ sandal'));
-    await tester.pumpAndSettle();
-    expect(
-      find.descendant(
-        of: find.byType(BottomSheet),
-        matching: find.text(
-          'Săn ngay sandal mùa hè với ưu đãi giảm 20%, áp dụng đến hết tuần này.',
-        ),
-      ),
-      findsOneWidget,
-    );
-    expect(provider.unreadCount, 9);
-    Navigator.of(tester.element(find.byType(BottomSheet))).pop();
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('Đọc tất cả'));
-    await tester.pumpAndSettle();
     expect(provider.unreadCount, 0);
-    expect(find.text('Đọc tất cả'), findsNothing);
+    expect(find.textContaining('Chưa có thông báo.'), findsOneWidget);
+    expect(find.text('Đơn hàng đã được xác nhận'), findsNothing);
   });
 
   testWidgets('news topics filter articles and reader shows related products', (
@@ -136,13 +114,14 @@ void main() {
     expect(find.text('Gửi câu hỏi cho LUMÉ'), findsOneWidget);
   });
 
-  testWidgets('exchange request validates fields and confirms demo request', (
+  testWidgets('exchange request validates fields and sends request to API', (
     tester,
   ) async {
     await tester.binding.setSurfaceSize(const Size(900, 1100));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
-    await tester.pumpWidget(const MaterialApp(home: HelpScreen()));
+    final api = _FakeSupportApi();
+    await tester.pumpWidget(MaterialApp(home: HelpScreen(supportApi: api)));
     await tester.pumpAndSettle();
     await tester.tap(
       find
@@ -169,7 +148,13 @@ void main() {
     await tester.ensureVisible(find.text('Gửi yêu cầu'));
     await tester.tap(find.text('Gửi yêu cầu'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('Đã ghi nhận yêu cầu EX-'), findsOneWidget);
+    expect(
+      find.textContaining('Đã gửi yêu cầu đổi trả. Mã: exchange-123'),
+      findsOneWidget,
+    );
+    expect(api.exchangeOrderCode, 'ORD-123');
+    expect(api.exchangePhone, '0900000000');
+    expect(api.exchangeReason, 'Đổi size');
   });
 
   testWidgets('About LUME contact form reports required fields', (
@@ -207,6 +192,38 @@ void main() {
     expect(find.text('Vui lòng nhập nội dung câu hỏi'), findsOneWidget);
   });
 
+  testWidgets('About LUME sends contact question to API', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(900, 1200));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    final api = _FakeSupportApi();
+    await tester.pumpWidget(
+      MaterialApp(home: AboutScreen(initialTab: 1, supportApi: api)),
+    );
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextFormField).at(0), 'Minh Anh');
+    await tester.enterText(
+      find.byType(TextFormField).at(1),
+      'minhanh@example.com',
+    );
+    await tester.enterText(
+      find.byType(TextFormField).at(2),
+      'Tôi muốn hỏi về đơn hàng.',
+    );
+    await tester.ensureVisible(find.text('Gửi câu hỏi'));
+    await tester.tap(find.text('Gửi câu hỏi'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.textContaining('Đã gửi câu hỏi thành công. Mã: question-456'),
+      findsOneWidget,
+    );
+    expect(api.questionName, 'Minh Anh');
+    expect(api.questionEmail, 'minhanh@example.com');
+    expect(api.questionTopic, 'Đơn hàng');
+    expect(api.questionBody, 'Tôi muốn hỏi về đơn hàng.');
+  });
+
   testWidgets('About story presents the promised brand information', (
     tester,
   ) async {
@@ -227,4 +244,52 @@ void main() {
     expect(find.text('LUMÉ Official'), findsOneWidget);
     expect(find.text('12 Đường số 5, Q.1'), findsOneWidget);
   });
+}
+
+class _FakeSupportApi extends SupportApi {
+  String? questionName;
+  String? questionEmail;
+  String? questionTopic;
+  String? questionBody;
+  String? exchangeOrderCode;
+  String? exchangePhone;
+  String? exchangeReason;
+
+  @override
+  Future<String> submitQuestion({
+    required String name,
+    required String email,
+    required String topic,
+    required String question,
+  }) async {
+    questionName = name;
+    questionEmail = email;
+    questionTopic = topic;
+    questionBody = question;
+    return 'question-456';
+  }
+
+  @override
+  Future<String> submitExchangeRequest({
+    required String orderCode,
+    required String phone,
+    required String reason,
+  }) async {
+    exchangeOrderCode = orderCode;
+    exchangePhone = phone;
+    exchangeReason = reason;
+    return 'exchange-123';
+  }
+}
+
+class _EmptyNotificationStore implements NotificationStore {
+  @override
+  Future<NotificationInbox> load() async =>
+      const NotificationInbox(notifications: [], readIds: {});
+
+  @override
+  Future<void> save(
+    List<AppNotification> notifications,
+    Set<String> readIds,
+  ) async {}
 }

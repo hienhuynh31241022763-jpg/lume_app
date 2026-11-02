@@ -58,6 +58,9 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                   : provider.notifications
                         .where((notification) => notification.type == tab)
                         .toList(),
+              isInitializing: provider.isInitializing,
+              isSupported: provider.isSupported,
+              errorMessage: provider.errorMessage,
             ),
         ],
       ),
@@ -66,31 +69,74 @@ class _NotificationsScreenState extends State<NotificationsScreen>
 }
 
 class _NotificationList extends StatelessWidget {
-  const _NotificationList({required this.notifications});
+  const _NotificationList({
+    required this.notifications,
+    required this.isInitializing,
+    required this.isSupported,
+    required this.errorMessage,
+  });
 
   final List<AppNotification> notifications;
+  final bool isInitializing;
+  final bool isSupported;
+  final String? errorMessage;
 
   @override
   Widget build(BuildContext context) {
     if (notifications.isEmpty) {
-      return const Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.notifications_none, size: 48, color: AppColors.muted),
-            SizedBox(height: 10),
-            Text('Chưa có thông báo'),
-          ],
+      final message = errorMessage != null
+          ? 'Không thể tải thông báo: $errorMessage'
+          : !isSupported
+          ? 'Thông báo đẩy chưa được hỗ trợ trên nền tảng này.'
+          : 'Chưa có thông báo. Thông báo Firebase nhận được sẽ hiển thị tại đây.';
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (isInitializing)
+                const CircularProgressIndicator()
+              else
+                const Icon(
+                  Icons.notifications_none,
+                  size: 48,
+                  color: AppColors.muted,
+                ),
+              const SizedBox(height: 10),
+              Text(message, textAlign: TextAlign.center),
+            ],
+          ),
         ),
       );
     }
 
-    return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
-      itemCount: notifications.length,
-      separatorBuilder: (_, _) => const SizedBox(height: 9),
-      itemBuilder: (context, index) =>
-          _NotificationTile(notification: notifications[index]),
+    return Column(
+      children: [
+        if (errorMessage != null)
+          Container(
+            color: AppColors.blush,
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                const Icon(Icons.error_outline, color: AppColors.roseDark),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text('Không thể đồng bộ thông báo: $errorMessage'),
+                ),
+              ],
+            ),
+          ),
+        Expanded(
+          child: ListView.separated(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
+            itemCount: notifications.length,
+            separatorBuilder: (_, _) => const SizedBox(height: 9),
+            itemBuilder: (context, index) =>
+                _NotificationTile(notification: notifications[index]),
+          ),
+        ),
+      ],
     );
   }
 }

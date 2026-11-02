@@ -33,6 +33,12 @@ class ApiClient {
     );
   }
 
+  static Future<dynamic> postTo(Uri uri, Map<String, dynamic> body) {
+    return _send(
+      () => http.post(uri, headers: _jsonHeaders, body: jsonEncode(body)),
+    );
+  }
+
   static Future<dynamic> put(String path, Map<String, dynamic> body) {
     return _send(
       () => http.put(_uri(path), headers: _jsonHeaders, body: jsonEncode(body)),
