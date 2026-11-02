@@ -137,8 +137,11 @@ class _DashedBorder extends CustomPainter {
 }
 
 /// MH-16: Tạm tính, Giảm giá, Phí giao hàng, Tổng cộng.
+/// Thanh toán (HT-01) dùng lại, tắt dòng "Mua thêm…" vì lúc đó không mua thêm được.
 class CartSummary extends StatelessWidget {
-  const CartSummary({super.key});
+  const CartSummary({super.key, this.showFreeShipHint = true});
+
+  final bool showFreeShipHint;
 
   @override
   Widget build(BuildContext context) {
@@ -168,7 +171,7 @@ class CartSummary extends StatelessWidget {
             value: cart.shipping == 0 ? 'Miễn phí' : formatPrice(cart.shipping),
             valueColor: cart.shipping == 0 ? AppColors.success : null,
           ),
-          if (missing > 0)
+          if (showFreeShipHint && missing > 0)
             Padding(
               padding: const EdgeInsets.only(bottom: 6),
               child: Align(

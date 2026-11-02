@@ -40,6 +40,16 @@ dependencies:
   model_viewer_plus: ^1.10.0
   firebase_core: ^5.1.0
   firebase_auth: ^7.0.1
+  # Hạo: Quét mã (HT-07), Ghim vị trí (HT-11), Đặt thành công (HT-02),
+  # lưu lịch sử tìm kiếm / địa chỉ (MH-07, HT-11)
+  mobile_scanner: ^7.4.3
+  image_picker: ^1.2.4
+  flutter_map: ^8.3.2
+  latlong2: ^0.10.1
+  geolocator: ^14.1.2
+  geocoding: ^5.0.1
+  lottie: ^3.8.1
+  shared_preferences: ^2.5.6
 
 dev_dependencies:
   flutter_test:
@@ -64,6 +74,7 @@ flutter:
   uses-material-design: true
   
   assets:
+    - assets/animations/
     - assets/images/
     - assets/models/
     - assets/data/
