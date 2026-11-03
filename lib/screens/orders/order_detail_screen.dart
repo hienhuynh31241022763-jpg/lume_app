@@ -68,6 +68,8 @@ class OrderDetailScreen extends StatelessWidget {
     }
 
     final cart = context.read<CartProvider>();
+    // MH-15: "Mua lại" chỉ tick các món của đơn cũ, bỏ tick hàng đang có sẵn.
+    cart.selectAll(false);
     for (var index = 0; index < order.items.length; index++) {
       final item = order.items[index];
       cart.add(

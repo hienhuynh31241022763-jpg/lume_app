@@ -129,10 +129,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   Widget build(BuildContext context) {
     final cart = context.watch<CartProvider>();
 
-    if (cart.isEmpty && !_placing) {
+    // Chưa tick món nào thì không có gì để thanh toán.
+    if (!cart.hasSelection && !_placing) {
       return Scaffold(
         appBar: AppBar(title: const Text('Thanh toán')),
-        body: const _EmptyCheckout(),
+        body: _EmptyCheckout(empty: cart.isEmpty),
       );
     }
 
@@ -195,7 +196,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 : Text(
                     _step < 2
                         ? 'Tiếp tục'
-                        : 'Đặt hàng · ${formatPrice(cart.total)}',
+                        : 'Đặt hàng · ${formatPrice(cart.selectedTotal)}',
                   ),
           ),
         ),
@@ -205,7 +206,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 }
 
 class _EmptyCheckout extends StatelessWidget {
-  const _EmptyCheckout();
+  const _EmptyCheckout({required this.empty});
+
+  /// Giỏ rỗng hẳn, hay chỉ là chưa tick món nào.
+  final bool empty;
 
   @override
   Widget build(BuildContext context) {
@@ -222,7 +226,7 @@ class _EmptyCheckout extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              'Giỏ hàng đang trống',
+              empty ? 'Giỏ hàng đang trống' : 'Bạn chưa chọn sản phẩm nào',
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 16),

@@ -43,8 +43,8 @@ class ReviewStep extends StatelessWidget {
         SectionLabel('Thanh toán', trailing: _EditButton(onTap: onEditPayment)),
         Text(payment),
         const SizedBox(height: 18),
-        SectionLabel('Sản phẩm (${cart.count})'),
-        for (final item in cart.items)
+        SectionLabel('Sản phẩm (${cart.selectedCount})'),
+        for (final item in cart.selectedItems)
           Padding(
             padding: const EdgeInsets.only(bottom: 10),
             child: Row(
