@@ -9,18 +9,19 @@ import '../../providers/notification_provider.dart';
 import '../../providers/product_provider.dart';
 import '../../routes/app_routes.dart';
 import '../../theme/app_colors.dart';
-import '../menu/app_drawer.dart';
 import '../filter/filter_results_screen.dart';
 import '../filter/product_filter.dart';
+import '../menu/app_drawer.dart';
 import '../product_detail/product_route.dart';
 import '../search/search_screen.dart';
 import 'category_emoji.dart';
 import 'demo_data.dart';
+import 'flash_sale_banner.dart';
 import 'home_product_card.dart';
 
 /// MH-05 · Trang chủ: giao diện (theo prototype màn 03)
 /// Lời chào + ☰ + chuông, thanh tìm kiếm có nút quét mã và bộ lọc,
-/// banner flash sale đếm ngược, danh mục dạng icon,
+/// banner flash sale đếm ngược slider, danh mục dạng icon,
 /// Hàng mới (lướt ngang), Bán chạy (lưới 2 cột).
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -72,7 +73,7 @@ class HomeScreen extends StatelessWidget {
                 pinned: true,
                 delegate: _PinnedSearchDelegate(),
               ),
-              const SliverToBoxAdapter(child: _FlashSaleBanner()),
+              const SliverToBoxAdapter(child: FlashSaleBanner()),
               SliverToBoxAdapter(
                 child: _CategoryRow(categories: categories),
               ),
@@ -262,7 +263,7 @@ class _HomeHeader extends StatelessWidget {
                     ),
                     child: Text(
                       '$unread',
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
@@ -409,163 +410,6 @@ class _SearchBox extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-// ───────────────────── Banner flash sale + đếm ngược ─────────────────────
-
-class _FlashSaleBanner extends StatelessWidget {
-  const _FlashSaleBanner();
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    return Container(
-      height: 140,
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        gradient: const LinearGradient(
-          colors: [Color(0xFFC97A8E), AppColors.roseDark],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Stack(
-        children: [
-          // Ảnh nền banner: assets/images/anhnentrangchu.jpg
-          // (thư mục assets/images/ đã khai báo sẵn trong pubspec.yaml).
-          // Ảnh phủ kín khung, canh phải để chiếc giày luôn nằm bên phải.
-          // Chưa có file ảnh thì tạm hiện emoji, app không bị lỗi.
-          Positioned.fill(
-            child: Image.asset(
-              'assets/images/anhnentrangchu.jpg',
-              fit: BoxFit.cover,
-              alignment: Alignment.centerRight,
-              errorBuilder: (_, _, _) => const Align(
-                alignment: Alignment.bottomRight,
-                child: Text('👠', style: TextStyle(fontSize: 120)),
-              ),
-            ),
-          ),
-          // Lớp hồng mờ dần từ trái sang phải để chữ trắng dễ đọc.
-          Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    AppColors.roseDark.withValues(alpha: 0.92),
-                    AppColors.rose.withValues(alpha: 0.55),
-                    Colors.transparent,
-                  ],
-                  stops: const [0, 0.45, 0.8],
-                ),
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  'FLASH SALE',
-                  style: textTheme.labelMedium?.copyWith(
-                    color: Colors.white70,
-                    letterSpacing: 1.6,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Giảm đến 50%',
-                  style: textTheme.headlineMedium?.copyWith(
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                const _Countdown(),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Đồng hồ đếm ngược tới 0h đêm nay, chạy thật mỗi giây.
-class _Countdown extends StatefulWidget {
-  const _Countdown();
-
-  @override
-  State<_Countdown> createState() => _CountdownState();
-}
-
-class _CountdownState extends State<_Countdown> {
-  Timer? _timer;
-  Duration _left = Duration.zero;
-
-  @override
-  void initState() {
-    super.initState();
-    _tick();
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
-  }
-
-  void _tick() {
-    final now = DateTime.now();
-    final end = DateTime(now.year, now.month, now.day + 1);
-    setState(() => _left = end.difference(now));
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  Widget _box(int value) {
-    return Container(
-      width: 34,
-      height: 30,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text(
-        value.toString().padLeft(2, '0'),
-        style: const TextStyle(
-          color: AppColors.roseDark,
-          fontWeight: FontWeight.w800,
-          fontSize: 15,
-        ),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    const colon = Padding(
-      padding: EdgeInsets.symmetric(horizontal: 4),
-      child: Text(
-        ':',
-        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800),
-      ),
-    );
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _box(_left.inHours),
-        colon,
-        _box(_left.inMinutes % 60),
-        colon,
-        _box(_left.inSeconds % 60),
-      ],
     );
   }
 }
