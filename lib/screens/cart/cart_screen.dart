@@ -57,7 +57,7 @@ class _CartBody extends StatelessWidget {
               const Padding(
                 padding: EdgeInsets.only(left: 4, bottom: 12),
                 child: Text(
-                  'Vuốt sang trái để xóa sản phẩm',
+                  'Tick chọn món muốn mua · vuốt sang trái để xóa',
                   style: TextStyle(fontSize: 12, color: AppColors.muted),
                 ),
               ),
@@ -67,22 +67,124 @@ class _CartBody extends StatelessWidget {
             ],
           ),
         ),
-        SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-            child: SizedBox(
-              width: double.infinity,
-              height: 52,
-              child: ElevatedButton(
-                onPressed: () =>
-                    Navigator.pushNamed(context, AppRoutes.checkout),
-                child: Text('Thanh toán · ${formatPrice(cart.total)}'),
+        const _CartBottomBar(),
+      ],
+    );
+  }
+}
+
+/// MH-15: thanh dưới hai tầng. Tầng trên chọn "Tất cả" và xóa hàng loạt,
+/// tầng dưới hiện tiền của các món đã tick và nút Thanh toán.
+class _CartBottomBar extends StatelessWidget {
+  const _CartBottomBar();
+
+  Future<void> _confirmRemove(BuildContext context, CartProvider cart) async {
+    final count = cart.selectedCount;
+    final messenger = ScaffoldMessenger.of(context);
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppColors.card,
+        title: const Text('Xóa sản phẩm đã chọn?'),
+        content: Text('$count sản phẩm sẽ bị xóa khỏi giỏ hàng.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Hủy'),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Xóa'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    cart.removeSelected();
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text('Đã xóa $count sản phẩm')));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cart = context.watch<CartProvider>();
+    final chosen = cart.hasSelection;
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppColors.card,
+        border: Border(top: BorderSide(color: AppColors.line)),
+      ),
+      padding: const EdgeInsets.fromLTRB(4, 4, 16, 8),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                Checkbox(
+                  value: cart.allSelected,
+                  activeColor: AppColors.rose,
+                  visualDensity: VisualDensity.compact,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  onChanged: (value) => cart.selectAll(value ?? false),
+                ),
+                const SizedBox(width: 6),
+                Text('Tất cả (${cart.items.length})'),
+                const Spacer(),
+                if (chosen)
+                  TextButton.icon(
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.error,
+                    ),
+                    icon: const Icon(Icons.delete_outline, size: 18),
+                    label: Text('Xóa (${cart.selectedCount})'),
+                    onPressed: () => _confirmRemove(context, cart),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Padding(
+              padding: const EdgeInsets.only(left: 12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          chosen ? 'Tổng cộng' : 'Chưa chọn sản phẩm nào',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.muted,
+                          ),
+                        ),
+                        PriceText(cart.selectedTotal),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  SizedBox(
+                    width: 168,
+                    height: 52,
+                    child: ElevatedButton(
+                      onPressed: chosen
+                          ? () =>
+                                Navigator.pushNamed(context, AppRoutes.checkout)
+                          : null,
+                      child: Text('Thanh toán (${cart.selectedCount})'),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }

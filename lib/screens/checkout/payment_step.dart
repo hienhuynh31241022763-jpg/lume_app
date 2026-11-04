@@ -62,7 +62,7 @@ class PaymentStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final total = context.watch<CartProvider>().total;
+    final total = context.watch<CartProvider>().selectedTotal;
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
       children: [

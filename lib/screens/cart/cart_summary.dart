@@ -146,7 +146,7 @@ class CartSummary extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cart = context.watch<CartProvider>();
-    final missing = CartProvider.freeShipFrom - cart.subtotal;
+    final missing = CartProvider.freeShipFrom - cart.selectedSubtotal;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -157,21 +157,24 @@ class CartSummary extends StatelessWidget {
       child: Column(
         children: [
           _Row(
-            label: 'Tạm tính (${cart.count} sản phẩm)',
-            value: formatPrice(cart.subtotal),
+            label: 'Tạm tính (${cart.selectedCount} sản phẩm)',
+            value: formatPrice(cart.selectedSubtotal),
           ),
-          if (cart.discount > 0)
+          if (cart.selectedDiscount > 0)
             _Row(
               label: 'Giảm giá',
-              value: '−${formatPrice(cart.discount)}',
+              value: '−${formatPrice(cart.selectedDiscount)}',
               valueColor: AppColors.rose,
             ),
           _Row(
             label: 'Phí giao hàng',
-            value: cart.shipping == 0 ? 'Miễn phí' : formatPrice(cart.shipping),
-            valueColor: cart.shipping == 0 ? AppColors.success : null,
+            value: cart.selectedShipping == 0
+                ? 'Miễn phí'
+                : formatPrice(cart.selectedShipping),
+            valueColor: cart.selectedShipping == 0 ? AppColors.success : null,
           ),
-          if (showFreeShipHint && missing > 0)
+          // Chưa tick món nào thì không gợi ý mua thêm, vì chưa chọn gì cả.
+          if (showFreeShipHint && missing > 0 && cart.selectedSubtotal > 0)
             Padding(
               padding: const EdgeInsets.only(bottom: 6),
               child: Align(
@@ -191,7 +194,7 @@ class CartSummary extends StatelessWidget {
                   style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
                 ),
               ),
-              PriceText(cart.total),
+              PriceText(cart.selectedTotal),
             ],
           ),
         ],

@@ -105,6 +105,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     );
 
     if (buyNow) {
+      // MH-15: "Mua ngay" chỉ thanh toán đúng đôi này, không phải cả giỏ.
+      context.read<CartProvider>().selectOnly(
+        product.id,
+        size: _size!,
+        color: _color ?? '',
+      );
       Navigator.pushNamed(context, AppRoutes.checkout);
       return;
     }

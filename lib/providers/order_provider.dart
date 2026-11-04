@@ -58,14 +58,14 @@ class OrderProvider extends ChangeNotifier {
       address: address,
       paymentMethod: paymentMethod,
       status: OrderStatus.pending,
-      items: cart.items.map((i) => i.toOrderItem()).toList(),
-      total: cart.total,
+      items: cart.selectedItems.map((i) => i.toOrderItem()).toList(),
+      total: cart.selectedTotal,
       createdAt: DateTime.now(),
     );
     try {
       final created = await _api.createOrder(order);
       _orders.insert(0, created);
-      cart.clear();
+      cart.clearOrdered();
       _error = null;
       notifyListeners();
       return created;

@@ -97,7 +97,7 @@ class CartItemTile extends StatelessWidget {
         child: const Icon(Icons.delete_outline, color: Colors.white),
       ),
       child: Container(
-        padding: const EdgeInsets.all(10),
+        padding: const EdgeInsets.fromLTRB(2, 10, 10, 10),
         decoration: BoxDecoration(
           color: AppColors.card,
           borderRadius: BorderRadius.circular(16),
@@ -111,8 +111,17 @@ class CartItemTile extends StatelessWidget {
         ),
         child: Row(
           children: [
+            // MH-15: tick để chọn món muốn thanh toán.
+            Checkbox(
+              value: item.selected,
+              activeColor: AppColors.rose,
+              visualDensity: VisualDensity.compact,
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              onChanged: (value) => cart.toggleSelect(item, value ?? false),
+            ),
+            const SizedBox(width: 2),
             ProductThumb(url: product.image, category: product.category),
-            const SizedBox(width: 12),
+            const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
