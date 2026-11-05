@@ -14,6 +14,7 @@ import '../screens/onboarding/onboarding_screen.dart';
 import '../screens/orders/orders_screen.dart';
 import '../screens/pin_location/pin_location_screen.dart';
 import '../screens/product_detail/product_detail_screen.dart';
+import '../screens/referral/referral_screen.dart';
 import '../screens/review/review_screen.dart';
 import '../screens/scan/scan_screen.dart';
 import '../screens/size_guide/size_guide_screen.dart';
@@ -39,6 +40,7 @@ class AppRoutes {
   static const news = '/news';
   static const help = '/help';
   static const about = '/about';
+  static const referral = '/referral';
 
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     final Widget page = switch (settings.name) {
@@ -56,6 +58,7 @@ class AppRoutes {
         order: settings.arguments is Order ? settings.arguments as Order : null,
       ),
       orders => const OrdersScreen(),
+      referral => const ReferralScreen(),
       review => ReviewScreen(args: settings.arguments as ReviewRouteArgs),
       scan => const ScanScreen(),
       pinLocation => const PinLocationScreen(),

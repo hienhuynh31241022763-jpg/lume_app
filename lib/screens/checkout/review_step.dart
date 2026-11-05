@@ -8,6 +8,7 @@ import '../cart/cart_item_tile.dart';
 import '../cart/cart_summary.dart';
 import '../pin_location/delivery_address.dart';
 import 'address_step.dart';
+import 'referral_box.dart';
 
 /// HT-01 · Bước 3: xem lại người nhận, địa chỉ, cách trả tiền, sản phẩm, tổng.
 class ReviewStep extends StatelessWidget {
@@ -83,6 +84,9 @@ class ReviewStep extends StatelessWidget {
             ),
           ),
         const SizedBox(height: 8),
+        const SectionLabel('Mã giới thiệu (giảm 5%)'),
+        const ReferralBox(),
+        const SizedBox(height: 18),
         const CartSummary(showFreeShipHint: false),
       ],
     );

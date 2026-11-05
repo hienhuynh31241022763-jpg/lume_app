@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../data/referral.dart';
 import '../models/cart_item.dart';
 import '../models/product.dart';
 
@@ -10,10 +11,14 @@ class CartProvider extends ChangeNotifier {
 
   final List<CartItem> _items = [];
   String? _voucherCode;
+  String? _referralCode;
 
   List<CartItem> get items => List.unmodifiable(_items);
   bool get isEmpty => _items.isEmpty;
   String? get voucherCode => _voucherCode;
+
+  /// Mã giới thiệu đang áp dụng (null nếu chưa nhập).
+  String? get referralCode => _referralCode;
 
   /// Tổng số lượng CẢ GIỎ (badge ở Chi tiết sản phẩm dùng số này).
   /// Tiền phải trả thì dùng nhóm `selected*` bên dưới.
@@ -56,8 +61,18 @@ class CartProvider extends ChangeNotifier {
     return value > selectedSubtotal ? selectedSubtotal : value;
   }
 
+  /// Giảm 5% khi có mã giới thiệu, tính sau khi đã trừ voucher (nên không âm).
+  int get selectedReferralDiscount {
+    if (_referralCode == null) return 0;
+    final base = selectedSubtotal - selectedDiscount;
+    return (base * Referral.discountRate).round();
+  }
+
   int get selectedTotal =>
-      selectedSubtotal - selectedDiscount + selectedShipping;
+      selectedSubtotal -
+      selectedDiscount -
+      selectedReferralDiscount +
+      selectedShipping;
 
   void toggleSelect(CartItem item, bool value) {
     if (item.selected == value) return;
@@ -96,16 +111,20 @@ class CartProvider extends ChangeNotifier {
   void removeSelected() {
     if (!hasSelection) return;
     _items.removeWhere((i) => i.selected);
-    if (_items.isEmpty) _voucherCode = null;
+    if (_items.isEmpty) {
+      _voucherCode = null;
+      _referralCode = null;
+    }
     notifyListeners();
   }
 
-  /// Đặt hàng xong: bỏ các dòng vừa đặt và bỏ luôn voucher đã dùng (giữ lại
-  /// thì phần giỏ còn lại được giảm lần hai bằng cùng một mã), rồi tick lại
-  /// các dòng còn lại cho đúng mặc định "mở giỏ là tick sẵn".
+  /// Đặt hàng xong: bỏ các dòng vừa đặt và bỏ luôn voucher và mã giới thiệu đã
+  /// dùng (giữ lại thì phần giỏ còn lại được giảm lần hai bằng cùng một mã),
+  /// rồi tick lại các dòng còn lại cho đúng mặc định "mở giỏ là tick sẵn".
   void clearOrdered() {
     _items.removeWhere((i) => i.selected);
     _voucherCode = null;
+    _referralCode = null;
     for (final item in _items) {
       item.selected = true;
     }
@@ -202,9 +221,25 @@ class CartProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Áp mã giới thiệu. Trả về null nếu thành công, ngược lại trả câu báo lỗi.
+  String? applyReferral(String code, {required String ownCode}) {
+    final key = code.trim().toUpperCase();
+    if (!Referral.isValidFormat(key)) return 'Mã giới thiệu không hợp lệ';
+    if (key == ownCode) return 'Bạn không thể dùng mã của chính mình';
+    _referralCode = key;
+    notifyListeners();
+    return null;
+  }
+
+  void removeReferral() {
+    _referralCode = null;
+    notifyListeners();
+  }
+
   void clear() {
     _items.clear();
     _voucherCode = null;
+    _referralCode = null;
     notifyListeners();
   }
 }

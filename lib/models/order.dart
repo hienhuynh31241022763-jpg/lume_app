@@ -63,6 +63,9 @@ class Order {
   final int total;
   final DateTime createdAt;
 
+  /// Mã giới thiệu đã dùng khi mua (rỗng nếu không dùng).
+  final String refCode;
+
   const Order({
     required this.id,
     required this.customerName,
@@ -73,6 +76,7 @@ class Order {
     required this.items,
     required this.total,
     required this.createdAt,
+    this.refCode = '',
   });
 
   Order copyWith({String? status}) => Order(
@@ -85,6 +89,7 @@ class Order {
     items: items,
     total: total,
     createdAt: createdAt,
+    refCode: refCode,
   );
 
   factory Order.fromJson(Map<String, dynamic> json) {
@@ -104,6 +109,7 @@ class Order {
           : [],
       total: toNum(json['total']).toInt(),
       createdAt: _toDate(json['createdAt']),
+      refCode: (json['refCode'] ?? '').toString(),
     );
   }
 
@@ -116,5 +122,6 @@ class Order {
     'items': items.map((e) => e.toJson()).toList(),
     'total': total,
     'createdAt': createdAt.toIso8601String(),
+    'refCode': refCode,
   };
 }
