@@ -172,6 +172,13 @@ class ProfileScreen extends StatelessWidget {
                         Navigator.pushNamed(context, AppRoutes.pinLocation),
                   ),
                   _MenuItem(
+                    icon: Icons.share_outlined,
+                    title: 'Tiếp thị liên kết',
+                    badge: 'Hoa hồng 5%',
+                    onTap: () =>
+                        Navigator.pushNamed(context, AppRoutes.referral),
+                  ),
+                  _MenuItem(
                     icon: Icons.confirmation_number_outlined,
                     title: 'Kho voucher',
                     badge: '3 mới',

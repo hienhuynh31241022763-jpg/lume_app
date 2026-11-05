@@ -61,6 +61,7 @@ class OrderProvider extends ChangeNotifier {
       items: cart.selectedItems.map((i) => i.toOrderItem()).toList(),
       total: cart.selectedTotal,
       createdAt: DateTime.now(),
+      refCode: cart.referralCode ?? '',
     );
     try {
       final created = await _api.createOrder(order);
