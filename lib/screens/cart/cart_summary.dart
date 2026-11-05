@@ -166,6 +166,12 @@ class CartSummary extends StatelessWidget {
               value: '−${formatPrice(cart.selectedDiscount)}',
               valueColor: AppColors.rose,
             ),
+          if (cart.selectedReferralDiscount > 0)
+            _Row(
+              label: 'Giảm giá giới thiệu (5%)',
+              value: '−${formatPrice(cart.selectedReferralDiscount)}',
+              valueColor: AppColors.rose,
+            ),
           _Row(
             label: 'Phí giao hàng',
             value: cart.selectedShipping == 0

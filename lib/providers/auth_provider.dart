@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 
+import '../data/referral.dart';
+
 class AuthProvider extends ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   User? _user;
@@ -32,6 +34,10 @@ class AuthProvider extends ChangeNotifier {
   }
 
   String get email => _user?.email ?? '';
+  String get uid => _user?.uid ?? '';
+
+  /// Mã giới thiệu của người đang đăng nhập (rỗng nếu chưa đăng nhập).
+  String get referralCode => Referral.codeFor(uid);
 
   bool get emailVerified => _user?.emailVerified ?? false;
 
