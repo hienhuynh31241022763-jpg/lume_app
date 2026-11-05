@@ -21,7 +21,7 @@ import 'product_images.dart';
 import 'product_reviews.dart';
 import 'product_reviews_screen.dart';
 import 'product_route.dart';
-
+import '../closet/favorite_button.dart';
 /// Chi tiết sản phẩm (theo prototype màn 05)
 /// - MH-10 (Uyên): tên, đánh giá, giá, % giảm, nhãn, mô tả, thanh nút dưới.
 /// - MH-12 (Uyên): chọn màu, chọn size, size hết hàng bị khóa.
@@ -924,7 +924,19 @@ class _InfoSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(product.name, style: textTheme.titleLarge),
+                    Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  product.name,
+                  style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+                ),
+              ),
+              const SizedBox(width: 8),
+              FavoriteButton(productId: product.id, size: 40),
+            ],
+          ),
           const SizedBox(height: 4),
           Row(
             children: [

@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -9,8 +7,10 @@ import '../../providers/notification_provider.dart';
 import '../../providers/product_provider.dart';
 import '../../routes/app_routes.dart';
 import '../../theme/app_colors.dart';
+import '../closet/favorite_button.dart';
 import '../filter/filter_results_screen.dart';
 import '../filter/product_filter.dart';
+import '../game/game_bubble.dart';
 import '../menu/app_drawer.dart';
 import '../product_detail/product_route.dart';
 import '../search/search_screen.dart';
@@ -61,103 +61,105 @@ class HomeScreen extends StatelessWidget {
 
     return Scaffold(
       drawer: const AppDrawer(),
-      body: SafeArea(
-        child: RefreshIndicator(
-          color: AppColors.rose,
-          onRefresh: () => provider.load(force: true),
-          child: CustomScrollView(
-            slivers: [
-              const SliverToBoxAdapter(child: _HomeHeader()),
-              // Ô tìm kiếm + nút quét + nút lọc ghim trên cùng khi cuộn.
-              SliverPersistentHeader(
-                pinned: true,
-                delegate: _PinnedSearchDelegate(),
-              ),
-              const SliverToBoxAdapter(child: FlashSaleBanner()),
-              SliverToBoxAdapter(
-                child: _CategoryRow(categories: categories),
-              ),
-              if (provider.isLoading && products.isEmpty)
-                const SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: Center(
-                    child: CircularProgressIndicator(color: AppColors.rose),
-                  ),
-                )
-              else if (provider.error != null && products.isEmpty)
-                SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: _ErrorView(
-                    message: provider.error!,
-                    onRetry: () => provider.load(force: true),
-                  ),
-                )
-              else ...[
+      body: GameBubbleLayer(
+        child: SafeArea(
+          child: RefreshIndicator(
+            color: AppColors.rose,
+            onRefresh: () => provider.load(force: true),
+            child: CustomScrollView(
+              slivers: [
+                const SliverToBoxAdapter(child: _HomeHeader()),
+                // Ô tìm kiếm + nút quét + nút lọc ghim trên cùng khi cuộn.
+                SliverPersistentHeader(
+                  pinned: true,
+                  delegate: _PinnedSearchDelegate(),
+                ),
+                const SliverToBoxAdapter(child: FlashSaleBanner()),
                 SliverToBoxAdapter(
-                  child: _SectionTitle(
-                    'Hàng mới',
-                    onMore: () => openFilterResults(
-                      context,
-                      title: 'Hàng mới',
-                      filter: const ProductFilter(newOnly: true),
-                      sort: SortOption.newest,
+                  child: _CategoryRow(categories: categories),
+                ),
+                if (provider.isLoading && products.isEmpty)
+                  const SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Center(
+                      child: CircularProgressIndicator(color: AppColors.rose),
                     ),
-                  ),
-                ),
-                SliverToBoxAdapter(
-                  child: _HorizontalProducts(
-                    products: newList,
-                    onTap: (p) => _openProduct(context, p, 'new'),
-                  ),
-                ),
-                SliverToBoxAdapter(
-                  child: _SectionTitle(
-                    'Bán chạy',
-                    onMore: () => openFilterResults(
-                      context,
-                      title: 'Bán chạy',
-                      sort: SortOption.bestSeller,
+                  )
+                else if (provider.error != null && products.isEmpty)
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: _ErrorView(
+                      message: provider.error!,
+                      onRetry: () => provider.load(force: true),
                     ),
-                  ),
-                ),
-                SliverLayoutBuilder(
-                  builder: (context, constraints) {
-                    const padding = 16.0;
-                    const gap = 12.0;
-                    final cellWidth =
-                        (constraints.crossAxisExtent - padding * 2 - gap) / 2;
-                    return SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(
-                        padding,
-                        0,
-                        padding,
-                        24,
+                  )
+                else ...[
+                  SliverToBoxAdapter(
+                    child: _SectionTitle(
+                      'Hàng mới',
+                      onMore: () => openFilterResults(
+                        context,
+                        title: 'Hàng mới',
+                        filter: const ProductFilter(newOnly: true),
+                        sort: SortOption.newest,
                       ),
-                      // .builder chỉ dựng thẻ đang hiện trên màn hình,
-                      // nên ảnh được tải dần khi cuộn tới (lazy load).
-                      sliver: SliverGrid.builder(
-                        itemCount: bestSellers.length,
-                        gridDelegate:
-                            SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              crossAxisSpacing: gap,
-                              mainAxisSpacing: gap,
-                              mainAxisExtent: HomeProductCard.heightFor(
-                                cellWidth,
-                              ),
-                            ),
-                        itemBuilder: (context, i) => HomeProductCard(
-                          product: bestSellers[i],
-                          heroTag: heroTagFor('best', bestSellers[i]),
-                          onTap: () =>
-                              _openProduct(context, bestSellers[i], 'best'),
+                    ),
+                  ),
+                  SliverToBoxAdapter(
+                    child: _HorizontalProducts(
+                      products: newList,
+                      onTap: (p) => _openProduct(context, p, 'new'),
+                    ),
+                  ),
+                  SliverToBoxAdapter(
+                    child: _SectionTitle(
+                      'Bán chạy',
+                      onMore: () => openFilterResults(
+                        context,
+                        title: 'Bán chạy',
+                        sort: SortOption.bestSeller,
+                      ),
+                    ),
+                  ),
+                  SliverLayoutBuilder(
+                    builder: (context, constraints) {
+                      const padding = 16.0;
+                      const gap = 12.0;
+                      final cellWidth =
+                          (constraints.crossAxisExtent - padding * 2 - gap) / 2;
+                      return SliverPadding(
+                        padding: const EdgeInsets.fromLTRB(
+                          padding,
+                          0,
+                          padding,
+                          24,
                         ),
-                      ),
-                    );
-                  },
-                ),
+                        // .builder chỉ dựng thẻ đang hiện trên màn hình,
+                        // nên ảnh được tải dần khi cuộn tới (lazy load).
+                        sliver: SliverGrid.builder(
+                          itemCount: bestSellers.length,
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                crossAxisSpacing: gap,
+                                mainAxisSpacing: gap,
+                                mainAxisExtent: HomeProductCard.heightFor(
+                                  cellWidth,
+                                ),
+                              ),
+                          itemBuilder: (context, i) => HomeProductCard(
+                            product: bestSellers[i],
+                            heroTag: heroTagFor('best', bestSellers[i]),
+                            onTap: () =>
+                                _openProduct(context, bestSellers[i], 'best'),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),
@@ -241,6 +243,9 @@ class _HomeHeader extends StatelessWidget {
               ],
             ),
           ),
+          // Tủ giày (các đôi đã thả tim), có số đôi đang cất.
+          const ClosetHeaderButton(),
+          const SizedBox(width: 10),
           Stack(
             clipBehavior: Clip.none,
             children: [

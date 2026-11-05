@@ -5,6 +5,7 @@ import '../../theme/app_colors.dart';
 import '../../widgets/price_text.dart';
 import '../product_detail/product_route.dart';
 import 'adaptive_image.dart';
+import '../closet/favorite_button.dart';
 import 'category_emoji.dart';
 
 /// Thẻ sản phẩm theo prototype Trang chủ: ảnh trong khung xám nhạt,
@@ -77,6 +78,12 @@ class HomeProductCard extends StatelessWidget {
                                 : AppColors.rose,
                           ),
                         ),
+                      // Trái tim: cất giày vào Tủ giày.
+                      Positioned(
+                        right: 6,
+                        top: 6,
+                        child: FavoriteButton(productId: product.id),
+                      ),
                     ],
                   ),
                 ),
