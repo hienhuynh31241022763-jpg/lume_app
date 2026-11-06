@@ -1,138 +1,104 @@
-import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
-import 'package:flutter/foundation.dart';
+// Model thông báo đơn giản
+class NotificationItem {
+  final String id;
+  final String title;
+  final String body;
+  final String type; // 'order', 'promo', hoặc 'system'
+  final DateTime createdAt;
+  bool isRead;
 
-import '../data/notification_data.dart';
-import '../data/notification_store.dart';
-import '../notification_service.dart';
+  NotificationItem({
+    required this.id,
+    required this.title,
+    required this.body,
+    required this.type,
+    required this.createdAt,
+    this.isRead = false,
+  });
+}
 
 class NotificationProvider extends ChangeNotifier {
-  NotificationProvider({NotificationStore? store, this._service})
-    : _store = store ?? LocalNotificationStore();
+  NotificationProvider({dynamic store, dynamic service});
 
-  final NotificationStore _store;
-  NotificationService? _service;
-  final List<AppNotification> _notifications = [];
-  final Set<String> _readIds = {};
-  String? _errorMessage;
-  bool _isInitializing = false;
-  bool _isInitialized = false;
-  bool _isSupported = true;
+  final List<NotificationItem> _notifications = [];
 
-  List<AppNotification> get notifications => List.unmodifiable(_notifications);
+  List<NotificationItem> get notifications => _notifications;
 
-  int get unreadCount =>
-      _notifications.where((item) => !_readIds.contains(item.id)).length;
+  // Lọc thông báo cho Tab Đơn hàng
+  List<NotificationItem> get orderNotifications =>
+      _notifications.where((item) => item.type == 'order').toList();
 
-  String? get errorMessage => _errorMessage;
+  // Lọc thông báo cho Tab Khuyến mãi
+  List<NotificationItem> get promoNotifications =>
+      _notifications.where((item) => item.type == 'promo').toList();
 
-  bool get isInitializing => _isInitializing;
+  int get unreadCount => _notifications.where((item) => !item.isRead).length;
 
-  bool get isSupported => _isSupported;
+  void markAsRead(NotificationItem item) {
+    item.isRead = true;
+    notifyListeners();
+  }
 
-  bool isRead(AppNotification notification) =>
-      _readIds.contains(notification.id);
+  void markAllRead() {
+    for (final item in _notifications) {
+      item.isRead = true;
+    }
+    notifyListeners();
+  }
+
+  void addNotification(NotificationItem item) {
+    _notifications.insert(0, item);
+    notifyListeners();
+  }
 
   Future<void> initialize() async {
-    if (_isInitializing || _isInitialized) return;
-    _isInitializing = true;
-    _errorMessage = null;
-    notifyListeners();
-
     try {
-      final inbox = await _store.load();
-      _notifications
-        ..clear()
-        ..addAll(inbox.notifications);
-      _notifications.sort((a, b) => b.receivedAt.compareTo(a.receivedAt));
-      _readIds
-        ..clear()
-        ..addAll(inbox.readIds);
-    } catch (error, stackTrace) {
-      _errorMessage = error.toString();
-      debugPrint('Không thể tải hộp thư thông báo đã lưu: $error');
-      debugPrintStack(stackTrace: stackTrace);
-    }
+      FirebaseMessaging messaging = FirebaseMessaging.instance;
 
-    if (kIsWeb) {
-      _isSupported = false;
-      _isInitialized = true;
-      _isInitializing = false;
-      notifyListeners();
-      return;
-    }
+      // 1. Xin quyền thông báo
+      await messaging.requestPermission(alert: true, badge: true, sound: true);
 
-    try {
-      _service ??= FcmNotificationService();
-      await _service!.initialize(onNotification: _handleIncomingNotification);
-      _isSupported = true;
-      _isInitialized = true;
-    } catch (error, stackTrace) {
-      _errorMessage = error.toString();
-      debugPrint('Không thể khởi tạo Firebase Messaging: $error');
-      debugPrintStack(stackTrace: stackTrace);
-    } finally {
-      _isInitializing = false;
-      notifyListeners();
-    }
-  }
-
-  Future<void> addNotification(AppNotification notification) =>
-      _receiveNotification(notification);
-
-  Future<void> _receiveNotification(AppNotification notification) async {
-    if (_notifications.any((item) => item.id == notification.id)) return;
-    _notifications.add(notification);
-    _notifications.sort((a, b) => b.receivedAt.compareTo(a.receivedAt));
-    notifyListeners();
-    await _saveInbox();
-  }
-
-  Future<void> markRead(AppNotification notification) async {
-    if (!_readIds.add(notification.id)) return;
-    notifyListeners();
-    await _saveInbox();
-  }
-
-  Future<void> markAllRead() async {
-    if (unreadCount == 0) return;
-    _readIds.addAll(_notifications.map((item) => item.id));
-    notifyListeners();
-    await _saveInbox();
-  }
-
-  Future<void> _saveInbox() {
-    return _persistInbox();
-  }
-
-  Future<void> _persistInbox() async {
-    try {
-      await _store.save(
-        List.unmodifiable(_notifications),
-        Set.unmodifiable(_readIds),
+      // 2. Bật hiển thị banner khi app đang mở (Foreground)
+      await FirebaseMessaging.instance.setForegroundNotificationOptions(
+        alert: true,
+        badge: true,
+        sound: true,
       );
-    } catch (error, stackTrace) {
-      _errorMessage = error.toString();
-      debugPrint('Không thể lưu hộp thư thông báo: $error');
-      debugPrintStack(stackTrace: stackTrace);
-      notifyListeners();
+
+      // 3. Lắng nghe thông báo và lưu vào danh sách
+      FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+        final title = message.notification?.title ?? message.data['title']?.toString() ?? '';
+        final body = message.notification?.body ?? message.data['body']?.toString() ?? '';
+
+        if (message.notification != null || title.isNotEmpty || body.isNotEmpty) {
+          // Lấy type từ FCM Custom Data (mặc định là 'system' nếu không gửi)
+          String rawType = (message.data['type'] ?? 'system').toString().toLowerCase();
+          String type = 'system';
+          if (rawType.contains('order') || rawType.contains('đơn')) {
+            type = 'order';
+          } else if (rawType.contains('promo') || rawType.contains('khuyến') || rawType.contains('offer')) {
+            type = 'promo';
+          } else if (rawType.isNotEmpty) {
+            type = rawType;
+          }
+
+          final newNotification = NotificationItem(
+            id: message.messageId ?? DateTime.now().toString(),
+            title: title.isNotEmpty ? title : (message.notification?.title ?? ''),
+            body: body.isNotEmpty ? body : (message.notification?.body ?? ''),
+            type: type,
+            createdAt: DateTime.now(),
+          );
+
+          _notifications.insert(0, newNotification); // Thêm lên đầu danh sách
+          notifyListeners(); // Cập nhật lại UI lập tức
+        }
+      });
+    } catch (e) {
+      debugPrint('FirebaseMessaging initialize error: $e');
     }
-  }
-
-  void _handleIncomingNotification(AppNotification notification) {
-    unawaited(
-      addNotification(notification)
-          .catchError((Object error, StackTrace stackTrace) {
-            debugPrint('Không thể lưu thông báo trên thiết bị: $error');
-            debugPrintStack(stackTrace: stackTrace);
-          }),
-    );
-  }
-
-  @override
-  void dispose() {
-    final service = _service;
-    if (service != null) unawaited(service.dispose());
-    super.dispose();
   }
 }
